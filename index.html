@@ -1072,7 +1072,7 @@ function vAdmin(el) {
       '<div class="form-row"><label><input type="checkbox" id="uSend" checked> 有設密碼時，寄開通信給對方（含平台網址、帳號和密碼）</label></div>' +
       (u.locked ? '<div class="form-row"><label><input type="checkbox" id="uUnlock" checked> 解除鎖定（密碼錯誤太多次）</label></div>' : '') +
       '<div class="form-row"><label>狀態</label><select id="uA"><option value="Y"' + (u.active === 'Y' ? ' selected' : '') + '>啟用</option><option value="N"' + (u.active === 'N' ? ' selected' : '') + '>停用</option></select></div>' +
-      '<div class="notice info">同單位的所有啟用帳號都會收到該單位的通知信；聯強帳號只收自己區域的建立、結案與中止通知。密碼請用電話或當面告訴同事。</div><div class="actions"><button class="btn" data-close>取消</button><button class="btn pri" id="uOk">儲存</button></div>', function (m, close) {
+      '<div class="notice info">同單位的所有啟用帳號都會收到該單位的通知信；聯強帳號只收自己區域的建立、結案與中止通知。有勾「寄開通信」時，密碼會寄到對方信箱；沒勾就要自己告訴同事。</div><div class="actions"><button class="btn" data-close>取消</button><button class="btn pri" id="uOk">儲存</button></div>', function (m, close) {
       var syncReg = function () { $('#uRegRow', m).style.display = $('#uU', m).value === '聯強' ? '' : 'none'; };
       $('#uU', m).onchange = syncReg; syncReg();
       $$('.uRg', m).forEach(function (cb) { cb.onchange = function () { if (cb.value === S.boot.allRegion && cb.checked) $$('.uRg', m).forEach(function (o) { if (o !== cb) o.checked = false; }); else if (cb.checked) $$('.uRg', m).forEach(function (o) { if (o.value === S.boot.allRegion) o.checked = false; }); }; });
