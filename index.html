@@ -1069,6 +1069,7 @@ function vAdmin(el) {
       '<div class="form-row" id="uRegRow"><label>聯強區域 <span class="req">*</span>（勾多區＝跨區；全區可看三區）</label><div style="display:flex;gap:14px;flex-wrap:wrap">' +
         S.boot.regions.concat([S.boot.allRegion]).map(function (r) { var cur = String(u.regions || '').split(','); return '<label style="font-weight:400;display:inline-flex;align-items:center;gap:6px;margin:0;font-size:14px;color:var(--ink)"><input type="checkbox" class="uRg" value="' + r + '"' + (cur.indexOf(r) >= 0 ? ' checked' : '') + '> ' + r + '</label>'; }).join('') + '</div></div>' +
       '<div class="form-row"><label>' + (u.isNew ? '初始密碼 <span class="req">*</span>' : '重設密碼（空白＝不變更）') + '（至少 8 個字，要有英文字母和數字；使用者第一次登入會被要求改掉）</label><div style="display:flex;gap:8px"><input id="uP" type="text" autocomplete="off" style="flex:1"><button class="btn" type="button" id="uGen">產生</button></div></div>' +
+      '<div class="form-row"><label><input type="checkbox" id="uSend" checked> 有設密碼時，寄開通信給對方（含平台網址、帳號和密碼）</label></div>' +
       (u.locked ? '<div class="form-row"><label><input type="checkbox" id="uUnlock" checked> 解除鎖定（密碼錯誤太多次）</label></div>' : '') +
       '<div class="form-row"><label>狀態</label><select id="uA"><option value="Y"' + (u.active === 'Y' ? ' selected' : '') + '>啟用</option><option value="N"' + (u.active === 'N' ? ' selected' : '') + '>停用</option></select></div>' +
       '<div class="notice info">同單位的所有啟用帳號都會收到該單位的通知信；聯強帳號只收自己區域的建立、結案與中止通知。密碼請用電話或當面告訴同事。</div><div class="actions"><button class="btn" data-close>取消</button><button class="btn pri" id="uOk">儲存</button></div>', function (m, close) {
@@ -1079,8 +1080,8 @@ function vAdmin(el) {
       $('#uOk', m).onclick = function () {
         var regs = $$('.uRg', m).filter(function (cb) { return cb.checked; }).map(function (cb) { return cb.value; });
         var pw = $('#uP', m).value.trim();
-        api('saveUser', { email: $('#uE', m).value, name: $('#uN', m).value.trim(), notifyEmail: $('#uM', m).value.trim(), unit: $('#uU', m).value, role: $('#uR', m).value, active: $('#uA', m).value, regions: $('#uU', m).value === '聯強' ? regs : [], password: pw, unlock: !!($('#uUnlock', m) && $('#uUnlock', m).checked) })
-          .then(function (d) { S.users = d; drawUsers(); close(); toast(pw ? '已儲存，請把密碼告訴同事：' + pw : '已儲存'); }).catch(function (e) { toast(e.message, true); });
+        api('saveUser', { email: $('#uE', m).value, name: $('#uN', m).value.trim(), notifyEmail: $('#uM', m).value.trim(), unit: $('#uU', m).value, role: $('#uR', m).value, active: $('#uA', m).value, regions: $('#uU', m).value === '聯強' ? regs : [], password: pw, unlock: !!($('#uUnlock', m) && $('#uUnlock', m).checked), sendMail: !!(pw && $('#uSend', m).checked), appUrl: location.href.split('#')[0] })
+          .then(function (d) { var sent = pw && $('#uSend', m).checked; S.users = d; drawUsers(); close(); toast(!pw ? '已儲存' : sent ? '已儲存，開通信已寄給對方' : '已儲存，請把密碼告訴同事：' + pw); }).catch(function (e) { toast(e.message, true); });
       };
     });
   };
