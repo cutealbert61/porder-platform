@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>P單久置未取平台</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer></script>
+<style>
+:root{
+  --bg:#f3f5f8;--panel:#fff;--ink:#1d2733;--ink2:#5a6776;--ink3:#8b96a3;--line:#dfe4ea;
+  --brand:#1f4e79;--brand2:#2e75b6;--brandbg:#e8f0f8;
+  --ok:#1e7e4a;--okbg:#e5f4ec;--warn:#a86400;--warnbg:#fff3dd;--bad:#c0392b;--badbg:#fdecea;--wait:#6b4fa0;--waitbg:#f0ebf8;
+  --r:10px;--sh:0 1px 3px rgba(20,40,60,.08),0 4px 14px rgba(20,40,60,.05);
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 "Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--brand2)}
+.hidden{display:none!important}
+/* 頂部 */
+header{background:var(--brand);color:#fff;position:sticky;top:0;z-index:20}
+.hbar{max-width:1280px;margin:0 auto;display:flex;align-items:center;gap:16px;padding:10px 16px;flex-wrap:wrap}
+.logo{font-weight:700;font-size:18px;letter-spacing:.5px;white-space:nowrap}
+.logo small{font-weight:400;opacity:.75;font-size:12px;margin-left:6px}
+nav{display:flex;gap:4px;flex:1;flex-wrap:wrap}
+nav button{background:none;border:0;color:#cfe0f0;padding:7px 12px;border-radius:7px;cursor:pointer;font-weight:500}
+nav button:hover{background:rgba(255,255,255,.1);color:#fff}
+nav button.on{background:#fff;color:var(--brand)}
+nav .cnt{display:inline-block;min-width:20px;padding:0 6px;margin-left:4px;border-radius:10px;background:var(--bad);color:#fff;font-size:12px;line-height:18px;text-align:center}
+.who{font-size:13px;display:flex;align-items:center;gap:10px;white-space:nowrap}
+.who .unit{background:rgba(255,255,255,.18);padding:2px 8px;border-radius:12px}
+.who button{background:none;border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:6px;padding:3px 10px;cursor:pointer}
+main{max-width:1280px;margin:0 auto;padding:18px 16px 60px}
+h2{font-size:20px;margin:4px 0 14px}
+h3{font-size:16px;margin:0 0 10px}
+.panel{background:var(--panel);border-radius:var(--r);box-shadow:var(--sh);padding:16px;margin-bottom:16px}
+/* KPI */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:var(--panel);border-radius:var(--r);box-shadow:var(--sh);padding:12px 14px;border-left:5px solid var(--brand2);cursor:pointer}
+.kpi b{display:block;font-size:30px;line-height:1.15}
+.kpi span{color:var(--ink2);font-size:13px}
+.kpi.bad{border-color:var(--bad)}.kpi.bad b{color:var(--bad)}
+.kpi.warn{border-color:#e69500}.kpi.warn b{color:var(--warn)}
+.kpi.wait{border-color:var(--wait)}.kpi.wait b{color:var(--wait)}
+.kpi.ok{border-color:var(--ok)}.kpi.ok b{color:var(--ok)}
+/* 卡片清單 */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;cursor:pointer;transition:border-color .15s}
+.card:hover{border-color:var(--brand2)}
+.card .no{font-weight:700;font-size:16px}
+.card .meta{color:var(--ink2);font-size:13px}
+.card .stp{margin-top:6px;font-weight:500}
+.card.overdue{border-left:5px solid var(--bad)}
+.card.today{border-left:5px solid #e69500}
+.chip{display:inline-block;padding:1px 9px;border-radius:12px;font-size:12px;font-weight:500;white-space:nowrap}
+.c-run{background:var(--brandbg);color:var(--brand)}.c-done{background:var(--okbg);color:var(--ok)}.c-stop{background:#eceff2;color:#59636e}
+.c-bad{background:var(--badbg);color:var(--bad)}.c-warn{background:var(--warnbg);color:var(--warn)}.c-wait{background:var(--waitbg);color:var(--wait)}
+.sec-title{display:flex;align-items:center;gap:8px;margin:18px 0 10px;font-weight:700}
+.sec-title .chip{font-size:13px}
+.empty{color:var(--ink3);padding:18px;text-align:center;border:1px dashed var(--line);border-radius:var(--r)}
+/* 表格 */
+.tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.tools input,.tools select{padding:7px 10px;border:1px solid var(--line);border-radius:7px;background:#fff}
+.tools input[type=search]{min-width:220px;flex:1}
+.tbl-wrap{overflow-x:auto}
+table.t{width:100%;border-collapse:collapse;font-size:14px}
+table.t th{background:#eef2f6;color:var(--ink2);font-weight:500;text-align:left;padding:8px 10px;white-space:nowrap;position:sticky;top:0}
+table.t td{border-top:1px solid var(--line);padding:8px 10px;vertical-align:top}
+table.t tr.click{cursor:pointer}
+table.t tr.click:hover td{background:#f6f9fc}
+/* 按鈕與表單 */
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#fff;border-radius:7px;padding:7px 14px;cursor:pointer;font-weight:500}
+.btn:hover{border-color:var(--brand2)}
+.btn.pri{background:var(--brand2);border-color:var(--brand2);color:#fff}
+.btn.pri:hover{background:var(--brand)}
+.btn.danger{color:var(--bad);border-color:#f0c4be}
+.btn.sm{padding:3px 10px;font-size:13px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.form-row{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+.form-row label{font-size:13px;color:var(--ink2);font-weight:500}
+.form-row input,.form-row select,.form-row textarea{padding:8px 10px;border:1px solid var(--line);border-radius:7px;background:#fff;width:100%}
+.form-row textarea{min-height:64px;resize:vertical}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:0 14px}
+.req{color:var(--bad)}
+/* 抽屜 */
+.overlay{position:fixed;inset:0;background:rgba(15,30,45,.45);z-index:50;display:flex;justify-content:flex-end}
+.drawer{background:var(--bg);width:min(860px,100%);height:100%;overflow-y:auto;box-shadow:-8px 0 30px rgba(0,0,0,.2)}
+.dhead{background:var(--panel);padding:16px 20px;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:2}
+.dhead .row1{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.dhead .big{font-size:22px;font-weight:700}
+.dhead .x{margin-left:auto;font-size:26px;background:none;border:0;cursor:pointer;color:var(--ink2);line-height:1}
+.dhead .info{color:var(--ink2);font-size:13px;margin-top:4px}
+.dbody{padding:16px 20px}
+.stepper{display:flex;gap:3px;margin-top:12px}
+.stepper div{flex:1;height:8px;border-radius:4px;background:#dde3ea}
+.stepper .grp{flex:3;display:flex;gap:2px;height:auto;padding:2px;margin:-3px 0;background:none;border:1px solid var(--brand2);border-radius:6px}
+.stepper div.d{background:var(--ok)}.stepper div.c{background:var(--brand2)}.stepper div.w{background:var(--wait)}.stepper div.s{background:#9aa5b1}
+/* 時間軸 */
+.tl{position:relative;margin-left:14px}
+.tl:before{content:"";position:absolute;left:0;top:6px;bottom:6px;width:2px;background:var(--line)}
+.tli{position:relative;padding:0 0 16px 26px}
+.tli .dot{position:absolute;left:-11px;top:2px;width:24px;height:24px;border-radius:50%;background:#dde3ea;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.tli.d .dot{background:var(--ok)}.tli.c .dot{background:var(--brand2);box-shadow:0 0 0 4px var(--brandbg)}.tli.w .dot{background:var(--wait)}.tli.x .dot{background:#9aa5b1}
+.tli .tt{font-weight:700}
+.cgroup{position:relative;margin:0 0 16px 14px;border:1px solid var(--brand2);border-radius:10px;background:var(--brandbg);padding:10px 10px 0 18px}
+.cgroup .tli{padding-bottom:12px}
+.cg-hd{font-weight:700;color:var(--brand);margin-bottom:6px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.cg-hd .chip{font-weight:500}
+.cg-plan{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:0 0 12px -8px;font-size:12px}
+.cg-plan div{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px;text-align:center;line-height:1.35}
+.cg-plan div b{display:block;font-size:15px;color:var(--ink)}
+.cg-plan div.d{border-color:var(--ok)}.cg-plan div.d b{color:var(--ok)}.cg-plan div.c{border-color:var(--brand2);box-shadow:0 0 0 2px var(--brandbg)}
+@media (max-width:520px){.cg-plan{grid-template-columns:repeat(2,1fr)}}
+.tli .tt .chip{margin-left:6px;font-weight:500}
+.tli .by{color:var(--ink2);font-size:13px}
+.tli .vals{margin:6px 0 0;padding:8px 10px;background:var(--panel);border:1px solid var(--line);border-radius:8px;font-size:14px}
+.tli .vals div{margin:1px 0}
+.tli.f .dot{background:#dde3ea}.tli.f .tt{color:var(--ink3);font-weight:500}
+.stepform{margin-top:8px;background:var(--panel);border:2px solid var(--brand2);border-radius:10px;padding:14px}
+.target{border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:10px;background:#fafcfe}
+.target .hd{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.target .hd label{font-weight:700;display:flex;align-items:center;gap:6px;cursor:pointer}
+.target .hd input[type=datetime-local]{padding:5px 8px;border:1px solid var(--line);border-radius:6px}
+.sms{margin-top:8px;font-size:13px;background:#fff;border:1px dashed #b9c6d3;border-radius:6px;padding:8px;white-space:pre-wrap;color:#33414f}
+.sms-bar{display:flex;justify-content:space-between;align-items:center;margin-top:6px;font-size:12px;color:var(--ink2)}
+.atts{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.att{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border:1px solid var(--line);border-radius:14px;background:#fff;font-size:13px;cursor:pointer}
+.att:hover{border-color:var(--brand2)}
+.notice{padding:10px 12px;border-radius:8px;font-size:14px;margin:8px 0}
+.notice.wait{background:var(--waitbg);color:var(--wait)}
+.notice.info{background:var(--brandbg);color:var(--brand)}
+.notice.bad{background:var(--badbg);color:var(--bad)}
+.notice.ok{background:var(--okbg);color:var(--ok)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+details.logs summary{cursor:pointer;font-weight:700;margin:6px 0}
+/* 對話框 */
+.modal-bg{position:fixed;inset:0;background:rgba(15,30,45,.5);z-index:80;display:flex;align-items:center;justify-content:center;padding:16px}
+.modal{background:#fff;border-radius:12px;max-width:520px;width:100%;padding:20px;box-shadow:0 10px 40px rgba(0,0,0,.25);max-height:90vh;overflow:auto}
+.modal h3{font-size:18px}
+.modal .actions{justify-content:flex-end;margin-top:16px}
+.modal img{max-width:100%;border-radius:8px}
+/* toast */
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:100;display:flex;flex-direction:column;gap:8px;align-items:center}
+#toast div{background:#22313f;color:#fff;padding:10px 18px;border-radius:8px;box-shadow:var(--sh);font-size:14px;max-width:90vw}
+#toast div.err{background:var(--bad)}
+#busy{position:fixed;top:0;left:0;right:0;height:3px;z-index:120;background:linear-gradient(90deg,transparent,#7fb8e8,transparent);background-size:40% 100%;animation:bz 1s linear infinite}
+@keyframes bz{from{background-position:-40% 0}to{background-position:140% 0}}
+/* 登入 */
+.login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;background:linear-gradient(160deg,#1f4e79,#2e75b6)}
+.login .box{background:#fff;border-radius:14px;padding:32px 28px;max-width:420px;width:100%;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.25)}
+.login h1{font-size:22px;margin:0 0 6px}
+.login p{color:var(--ink2);margin:0 0 20px}
+.login .msg{margin-top:16px}
+/* 報表 */
+.bars .bar{display:grid;grid-template-columns:150px 1fr 48px;align-items:center;gap:8px;margin:5px 0;font-size:13px}
+.bars .bar i{display:block;height:16px;border-radius:4px;background:var(--brand2);min-width:2px}
+.subtabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.subtabs button{border:1px solid var(--line);background:#fff;padding:6px 14px;border-radius:18px;cursor:pointer}
+.subtabs button.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+@media (max-width:640px){
+  .hbar{gap:8px}.logo small{display:none}
+  nav button{padding:6px 8px;font-size:14px}
+  .dhead,.dbody{padding-left:14px;padding-right:14px}
+  .bars .bar{grid-template-columns:96px 1fr 36px}
+  .tools input[type=search]{min-width:0}
+}
+</style>
+</head>
+<body>
+<div id="busy" class="hidden"></div>
+<div id="toast"></div>
+
+<!-- 初次設定 -->
+<section id="vSetup" class="login hidden">
+  <div class="box" style="text-align:left">
+    <h1>初次設定</h1>
+    <p>請填入管理員給你的後端網址（只需設定一次）。</p>
+    <div class="form-row"><label>後端網址（GAS 網頁應用程式 /exec 網址）</label><input id="cfgUrl" placeholder="https://script.google.com/macros/s/.../exec"></div>
+    <button class="btn pri" id="cfgSave">儲存</button>
+  </div>
+</section>
+
+<!-- 登入 -->
+<section id="vLogin" class="login hidden">
+  <div class="box">
+    <h1>P單久置未取平台</h1>
+    <form id="loginForm" autocomplete="on" style="text-align:left">
+      <p style="text-align:center">請輸入管理員給你的帳號和密碼</p>
+      <div class="form-row"><label>帳號（Email）</label><input id="lE" type="email" autocomplete="username" required></div>
+      <div class="form-row"><label>密碼</label><input id="lP" type="password" autocomplete="current-password" required></div>
+      <button class="btn pri" id="lBtn" type="submit" style="width:100%;justify-content:center">登入</button>
+      <p style="font-size:12px;color:var(--ink3);text-align:center;margin-top:12px">忘記密碼請洽管理員重設</p>
+    </form>
+    <form id="pwForm" class="hidden" autocomplete="off" style="text-align:left">
+      <p style="text-align:center"><b>第一次登入，請設定自己的密碼</b></p>
+      <div class="form-row"><label>目前密碼（管理員給的初始密碼）</label><input id="pO" type="password" autocomplete="current-password"></div>
+      <div class="form-row"><label>新密碼（至少 8 個字，要有英文字母和數字）</label><input id="pN" type="password" autocomplete="new-password"></div>
+      <div class="form-row"><label>再輸入一次新密碼</label><input id="pN2" type="password" autocomplete="new-password"></div>
+      <button class="btn pri" id="pBtn" type="submit" style="width:100%;justify-content:center">儲存新密碼並進入</button>
+    </form>
+    <div class="msg" id="loginMsg"></div>
+  </div>
+</section>
+
+<!-- 主畫面 -->
+<section id="vApp" class="hidden">
+  <header><div class="hbar">
+    <div class="logo">P單久置未取平台<small>宅+裝 P單處理流程</small></div>
+    <nav id="nav"></nav>
+    <div class="who"><span id="whoName"></span><span class="unit" id="whoUnit"></span><button id="btnPw">改密碼</button><button id="btnLogout">登出</button></div>
+  </div></header>
+  <main id="main"></main>
+</section>
+
+<div id="drawerRoot"></div>
+<div id="modalRoot"></div>
+
+<script>
+/* ===== 部署設定：管理員填好這兩個值再上傳，大家就不用自己設定 ===== */
+var APP_CONFIG = {
+  GAS_URL: ''
+};
+</script>
+<script>
+(function () {
+'use strict';
+var LS_CFG = 'porder_cfg', LS_TOKEN = 'porder_token', LS_BOOT = 'porder_boot';
+var $ = function (s, r) { return (r || document).querySelector(s); };
+var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+function ls(k, v) { try { if (v === undefined) return localStorage.getItem(k); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { return null; } }
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+
+var cfg = (function () {
+  var saved = {}; try { saved = JSON.parse(ls(LS_CFG) || '{}'); } catch (e) {}
+  return { GAS_URL: APP_CONFIG.GAS_URL || saved.GAS_URL || '' };
+})();
+if (/[?&]reset/.test(location.search)) { ls(LS_CFG, null); ls(LS_TOKEN, null); }
+(function () { // 管理員可用「網址?gas=...」一次帶入設定
+  var q = new URLSearchParams(location.search), gas = q.get('gas');
+  if (gas && !APP_CONFIG.GAS_URL) { cfg.GAS_URL = gas; ls(LS_CFG, JSON.stringify(cfg)); history.replaceState(null, '', location.pathname + location.hash); }
+})();
+
+var S = { token: ls(LS_TOKEN), boot: null, cases: [], view: 'todo', caseFilter: {}, reportTab: 'stats', logs: null, users: null, openCaseId: null, loadedAt: 0 };
+
+/* ---------- 共用 ---------- */
+function toast(msg, err) {
+  var d = document.createElement('div'); if (err) d.className = 'err'; d.textContent = msg;
+  $('#toast').appendChild(d); setTimeout(function () { d.remove(); }, err ? 6000 : 3000);
+}
+var busyN = 0;
+function busy(on) { busyN += on ? 1 : -1; $('#busy').classList.toggle('hidden', busyN <= 0); }
+
+function api(action, payload) {
+  busy(true);
+  return fetch(cfg.GAS_URL, { method: 'POST', body: JSON.stringify({ action: action, payload: payload || {}, token: S.token }) })
+    .then(function (r) { if (!r.ok) throw new Error('連線失敗（' + r.status + '）'); return r.json(); })
+    .catch(function (e) {
+      if (e instanceof TypeError) throw new Error('連不到後端。若一直發生，可能是防毒軟體或網路擋住 Google 服務');
+      throw e;
+    })
+    .then(function (r) {
+      if (!r.ok) {
+        if (r.auth && action !== 'login') { logout(r.error); }
+        if (r.mustChange) { showPwChange(); }
+        var err = new Error(r.error); err.auth = r.auth; err.mustChange = r.mustChange; throw err;
+      }
+      return r.data;
+    })
+    .finally(function () { busy(false); });
+}
+
+function pad(n) { return (n < 10 ? '0' : '') + n; }
+function nowLocal() { var d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+function today() { return nowLocal().slice(0, 10); }
+function addDays(ymd, n) { var p = ymd.split('-'); var d = new Date(Date.UTC(+p[0], p[1] - 1, +p[2] + n)); return d.toISOString().slice(0, 10); }
+function daysBetween(a, b) { var pa = a.split('-'), pb = b.split('-'); return Math.round((Date.UTC(pb[0], pb[1] - 1, pb[2]) - Date.UTC(pa[0], pa[1] - 1, pa[2])) / 864e5); }
+function zh(ymd) { if (!ymd) return ''; var p = ymd.slice(0, 10).split('-'); return p[0] + '年' + p[1] + '月' + p[2] + '日'; }
+function short(dt) { return dt ? dt.slice(0, 16) : ''; }
+function userLabel(rec) { return esc(rec.byName || rec.by) + (rec.byName ? ' <span style="color:var(--ink3)">(' + esc(rec.by) + ')</span>' : ''); }
+
+function steps() { return S.boot.steps; }
+/* 15天聯絡機制：從第1次聯絡（使用者簡訊日）起算，第7天第2次、第14天第3次、第15天轉ASS */
+function contact() { return S.boot.contact || { group: '15天聯絡機制', total: 15, offset: { 3: 7, 4: 14, 5: 15 } }; }
+function userSms(c, n) { var r = c.data['s' + n]; return r && r.values && r.values.targets && r.values.targets['使用者'] ? String(r.values.targets['使用者']).slice(0, 10) : ''; }
+function contactAnchor(c) { return userSms(c, 3); }
+function contactDue(anchor, stepNo, sentDay) { if (!anchor) return ''; var due = addDays(anchor, contact().offset[stepNo]); if (sentDay) { var mn = addDays(sentDay, 1); if (due < mn) due = mn; } return due; }
+function contactDay(c) { var a = contactAnchor(c); if (!a) return 0; return daysBetween(a, today()) + 1; }
+function stepTitle(d) { return d.group ? d.title.split('－').slice(1).join('－') : d.title; }
+function unitName(u) { return S.boot.units[u] || u; }
+function me() { return S.boot.me; }
+function isAdmin() { return me().role === 'admin'; }
+function canAct(unit) { return isAdmin() || me().unit === unit; }
+
+/* 案件狀態計算 */
+function info(c) {
+  var t = today();
+  var r = { stepDef: steps()[c.step] || null, waiting: false, waitLeft: 0, waited: 0, overdue: false, dueToday: false };
+  if (c.status !== '進行中') return r;
+  var avail = (c.availableAt || c.createdAt || '').slice(0, 10);
+  if (avail > t) { r.waiting = true; r.waitLeft = daysBetween(t, avail); return r; }
+  r.waited = daysBetween(avail, t);
+  r.dueToday = !!c.dueAt && avail === t;
+  r.overdue = r.waited >= +(S.boot.settings.OVERDUE_DAYS || 2);
+  return r;
+}
+function statusChip(c) {
+  if (c.status === '已結案') return '<span class="chip c-done">已結案</span>';
+  if (c.status === '已中止') return '<span class="chip c-stop">已中止</span>';
+  var i = info(c);
+  if (i.waiting) return '<span class="chip c-wait">等待中，' + c.availableAt.slice(5, 10).replace('-', '/') + ' 起可做（剩' + i.waitLeft + '天）</span>';
+  if (i.overdue) return '<span class="chip c-bad">逾期 ' + i.waited + ' 天</span>';
+  if (i.dueToday) return '<span class="chip c-warn">今天到期</span>';
+  return '<span class="chip c-run">進行中</span>';
+}
+function stepText(c) {
+  if (c.status === '已結案') return '已完成';
+  var d = steps()[c.step];
+  return d ? d.no + '. ' + d.title : '';
+}
+function ageDays(c) { return daysBetween(c.createdAt.slice(0, 10), (c.status === '進行中' ? today() : (c.status === '已結案' ? (c.data['s10'] || {}).at || c.updatedAt : c.stopAt || c.updatedAt).slice(0, 10))); }
+
+/* ---------- 啟動與登入 ---------- */
+function start() {
+  if (!cfg.GAS_URL) return showSetup();
+  if (S.token) {
+    try { S.boot = JSON.parse(ls(LS_BOOT) || 'null'); } catch (e) {}
+    if (S.boot) return api('bootstrap').then(function (b) { S.boot = b; ls(LS_BOOT, JSON.stringify(b)); enterApp(); }).catch(function (e) { if (!e.auth && !e.mustChange) { toast(e.message, true); enterApp(); } });
+  }
+  showLogin();
+}
+function show(id) { ['#vSetup', '#vLogin', '#vApp'].forEach(function (s) { $(s).classList.toggle('hidden', s !== id); }); }
+function showSetup() {
+  show('#vSetup'); $('#cfgUrl').value = cfg.GAS_URL;
+  $('#cfgSave').onclick = function () {
+    cfg.GAS_URL = $('#cfgUrl').value.trim();
+    if (!/^https:\/\//.test(cfg.GAS_URL)) return toast('網址要 https 開頭', true);
+    ls(LS_CFG, JSON.stringify(cfg)); start();
+  };
+}
+function loginMsg(msg, cls) { $('#loginMsg').innerHTML = msg ? '<div class="notice ' + (cls || 'bad') + '">' + esc(msg) + '</div>' : ''; }
+function showLogin(msg) {
+  show('#vLogin'); $('#loginForm').classList.remove('hidden'); $('#pwForm').classList.add('hidden');
+  loginMsg(msg);
+  $('#lP').value = '';
+  $('#loginForm').onsubmit = function (ev) {
+    ev.preventDefault();
+    var email = $('#lE').value.trim(), pw = $('#lP').value;
+    if (!email || !pw) return loginMsg('請輸入帳號和密碼');
+    loginMsg('登入中…', 'info');
+    api('login', { email: email, password: pw }).then(function (d) {
+      S.token = d.token; ls(LS_TOKEN, d.token);
+      if (d.mustChange) { showPwChange(pw); return; }
+      S.boot = d.boot; ls(LS_BOOT, JSON.stringify(d.boot)); loginMsg(''); enterApp();
+    }).catch(function (e) { loginMsg(e.message); });
+  };
+}
+function showPwChange(oldPw) {
+  show('#vLogin'); $('#loginForm').classList.add('hidden'); $('#pwForm').classList.remove('hidden');
+  loginMsg(''); $('#pO').value = oldPw || ''; $('#pN').value = ''; $('#pN2').value = '';
+  $('#pwForm').onsubmit = function (ev) {
+    ev.preventDefault();
+    var n1 = $('#pN').value, n2 = $('#pN2').value;
+    if (n1 !== n2) return loginMsg('兩次輸入的新密碼不一樣');
+    api('changePassword', { oldPassword: $('#pO').value, newPassword: n1 }).then(function (b) {
+      S.boot = b; ls(LS_BOOT, JSON.stringify(b)); loginMsg(''); toast('密碼已更新'); enterApp();
+    }).catch(function (e) { loginMsg(e.message); });
+  };
+}
+function changePwModal() {
+  modal('<h3>修改密碼</h3><div class="form-row"><label>目前密碼</label><input id="cO" type="password" autocomplete="current-password"></div>' +
+    '<div class="form-row"><label>新密碼（至少 ' + (S.boot.minPassword || 8) + ' 個字，要有英文字母和數字）</label><input id="cN" type="password" autocomplete="new-password"></div>' +
+    '<div class="form-row"><label>再輸入一次新密碼</label><input id="cN2" type="password" autocomplete="new-password"></div>' +
+    '<div class="actions"><button class="btn" data-close>取消</button><button class="btn pri" id="cOk">儲存</button></div>', function (m, close) {
+    $('#cOk', m).onclick = function () {
+      if ($('#cN', m).value !== $('#cN2', m).value) return toast('兩次輸入的新密碼不一樣', true);
+      api('changePassword', { oldPassword: $('#cO', m).value, newPassword: $('#cN', m).value }).then(function (b) { S.boot = b; ls(LS_BOOT, JSON.stringify(b)); close(); toast('密碼已更新'); }).catch(function (e) { toast(e.message, true); });
+    };
+  });
+}
+function logout(msg) {
+  if (S.token && !msg) { var tk = S.token; fetch(cfg.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'logout', payload: {}, token: tk }) }).catch(function () {}); }
+  S.token = null; ls(LS_TOKEN, null); ls(LS_BOOT, null); closeDrawer();
+  showLogin(msg);
+}
+function myRegions() { return (me().regions || []); }
+function regionLabel() { var r = myRegions(); return me().allRegion ? '全區' : r.join('、'); }
+function seesAllRegions() { return isAdmin() || me().unit !== '聯強'; }
+function enterApp() {
+  show('#vApp');
+  $('#whoName').textContent = me().name || me().email;
+  $('#whoUnit').textContent = (isAdmin() ? '管理員・' : '') + unitName(me().unit) + (me().unit === '聯強' && myRegions().length ? '・' + regionLabel() : '');
+  $('#btnLogout').onclick = function () { logout(); };
+  $('#btnPw').onclick = function () { changePwModal(); };
+  loadCases().then(function () { route(); });
+}
+function loadCases() {
+  return api('listCases').then(function (list) {
+    S.cases = list.sort(function (a, b) { return b.createdAt < a.createdAt ? -1 : 1; });
+    S.loadedAt = Date.now(); renderNav();
+  }).catch(function (e) { toast(e.message, true); });
+}
+function route() {
+  var m = location.hash.match(/case[=-]([A-Za-z0-9_.~-]+)/);
+  render();
+  if (m) openCase(decodeURIComponent(m[1]));
+}
+window.addEventListener('hashchange', function () { if (S.boot && $('#vApp').offsetParent !== null) { var m = location.hash.match(/case[=-]([A-Za-z0-9_.~-]+)/); if (m) openCase(decodeURIComponent(m[1])); } });
+document.addEventListener('visibilitychange', function () { if (!document.hidden && S.token && S.boot && Date.now() - S.loadedAt > 60000) loadCases().then(render); });
+setInterval(function () { if (!document.hidden && S.token && S.boot && !S.openCaseId && !$('#modalRoot').innerHTML) loadCases().then(render); }, 180000);
+
+/* ---------- 導覽 ---------- */
+function myTodo() {
+  return S.cases.filter(function (c) { return c.status === '進行中' && !info(c).waiting && canAct(steps()[c.step].unit); });
+}
+function renderNav() {
+  var tabs = [['todo', '我的待辦', myTodo().length], ['cases', '全部案件'], ];
+  if (canAct('聯強')) tabs.push(['new', '新增提報']);
+  tabs.push(['report', '報表查詢']);
+  if (isAdmin()) tabs.push(['admin', '管理設定']);
+  $('#nav').innerHTML = tabs.map(function (t) { return '<button data-v="' + t[0] + '" class="' + (S.view === t[0] ? 'on' : '') + '">' + t[1] + (t[2] ? '<span class="cnt">' + t[2] + '</span>' : '') + '</button>'; }).join('');
+  $$('#nav button').forEach(function (b) { b.onclick = function () { S.view = b.dataset.v; render(); }; });
+}
+function render() {
+  renderNav();
+  var v = { todo: vTodo, cases: vCases, 'new': vNew, report: vReport, admin: vAdmin }[S.view] || vTodo;
+  v($('#main'));
+}
+
+/* ---------- 我的待辦 ---------- */
+function vTodo(el) {
+  var run = S.cases.filter(function (c) { return c.status === '進行中'; });
+  var mine = myTodo();
+  var waiting = run.filter(function (c) { return info(c).waiting && canAct(steps()[c.step].unit); });
+  var overdue = run.filter(function (c) { return info(c).overdue; });
+  var dueToday = run.filter(function (c) { return info(c).dueToday; });
+  var month = today().slice(0, 7);
+  var closedM = S.cases.filter(function (c) { return c.status === '已結案' && ((c.data.s10 || {}).at || '').slice(0, 7) === month; });
+  var kpi = function (cls, n, label, act) { return '<div class="kpi ' + cls + '" data-act="' + act + '"><b>' + n + '</b><span>' + label + '</span></div>'; };
+  el.innerHTML = '<h2>您好，' + esc(me().name || me().email) + '</h2>' +
+    '<div class="kpis">' + kpi('', mine.length, '輪到我處理', 'mine') + kpi('warn', dueToday.length, '今天到期', 'today') + kpi('bad', overdue.length, '逾期未處理（全部）', 'overdue') +
+    kpi('wait', run.filter(function (c) { return info(c).waiting; }).length, '15天聯絡等待中', 'wait') + kpi('', run.length, '進行中總件數', 'run') + kpi('ok', closedM.length, '本月結案', 'closed') + '</div>' +
+    '<div class="sec-title">輪到我處理 <span class="chip c-run">' + mine.length + '</span>' + (isAdmin() ? '<span style="font-weight:400;color:var(--ink3);font-size:13px">管理員可處理所有單位</span>' : '') + '</div>' +
+    (mine.length ? '<div class="cards">' + sortUrgent(mine).map(card).join('') + '</div>' : '<div class="empty">目前沒有需要您處理的案件 👍</div>') +
+    '<div class="sec-title">15 天聯絡機制等待中 <span class="chip c-wait">' + waiting.length + '</span></div>' +
+    (waiting.length ? '<div class="cards">' + waiting.sort(function (a, b) { return a.availableAt < b.availableAt ? -1 : 1; }).map(card).join('') + '</div>' : '<div class="empty">沒有等待中的案件</div>');
+  $$('.card', el).forEach(function (d) { d.onclick = function () { openCase(d.dataset.id); }; });
+  $$('.kpi', el).forEach(function (d) { d.onclick = function () {
+    var a = d.dataset.act;
+    if (a === 'mine') return;
+    S.caseFilter = { status: a === 'closed' ? '已結案' : '進行中', flag: { today: 'today', overdue: 'overdue', wait: 'wait' }[a] || '' };
+    S.view = 'cases'; render();
+  }; });
+}
+function sortUrgent(list) { return list.slice().sort(function (a, b) { return info(b).waited - info(a).waited; }); }
+function card(c) {
+  var i = info(c), d = steps()[c.step];
+  return '<div class="card ' + (i.overdue ? 'overdue' : i.dueToday ? 'today' : '') + '" data-id="' + esc(c.id) + '">' +
+    '<div style="display:flex;justify-content:space-between;gap:8px;align-items:start"><span class="no">' + esc(c.dispatchNo) + '</span>' + statusChip(c) + '</div>' +
+    '<div class="meta">' + (c.region ? '<b>' + esc(c.region) + '</b>・' : '') + '訂單 ' + esc(c.orderNo || '—') + '・提報 ' + c.createdAt.slice(0, 10) + '・第 ' + ageDays(c) + ' 天</div>' +
+    '<div class="stp">' + esc(d.no + '. ' + d.title) + ' <span class="chip c-run" style="font-weight:400">' + esc(unitName(d.unit)) + '</span></div></div>';
+}
+
+/* ---------- 全部案件 ---------- */
+function vCases(el) {
+  var f = S.caseFilter;
+  el.innerHTML = '<h2>全部案件</h2><div class="panel"><div class="tools">' +
+    '<input type="search" id="fQ" placeholder="搜尋派工編號、訂單編號、備註" value="' + esc(f.q || '') + '">' +
+    ((seesAllRegions() || myRegions().length > 1) ? '<select id="fRegion"><option value="">全部區域</option>' + (seesAllRegions() ? S.boot.regions : myRegions()).map(function (r) { return '<option' + (f.region === r ? ' selected' : '') + '>' + r + '</option>'; }).join('') + '</select>' : '') +
+    '<select id="fStatus"><option value="">全部狀態</option>' + ['進行中', '已結案', '已中止'].map(function (s) { return '<option' + (f.status === s ? ' selected' : '') + '>' + s + '</option>'; }).join('') + '</select>' +
+    '<select id="fFlag"><option value="">全部進度</option>' + [['overdue', '逾期'], ['today', '今天到期'], ['wait', '15天聯絡等待中']].map(function (s) { return '<option value="' + s[0] + '"' + (f.flag === s[0] ? ' selected' : '') + '>' + s[1] + '</option>'; }).join('') + '</select>' +
+    '<select id="fStep"><option value="">全部關卡</option>' + steps().slice(2).map(function (d) { return '<option value="' + d.no + '"' + (+f.step === d.no ? ' selected' : '') + '>' + d.no + '. ' + d.short + '</option>'; }).join('') + '</select>' +
+    '<select id="fUnit"><option value="">全部負責單位</option>' + Object.keys(S.boot.units).map(function (u) { return '<option value="' + u + '"' + (f.unit === u ? ' selected' : '') + '>' + unitName(u) + '</option>'; }).join('') + '</select>' +
+    '<input type="date" id="fFrom" title="提報日起" value="' + (f.from || '') + '"><input type="date" id="fTo" title="提報日迄" value="' + (f.to || '') + '">' +
+    '<button class="btn" id="fClear">清除</button>' + (isAdmin() ? '<button class="btn pri" id="fExport">匯出 Excel</button>' : '') + '</div>' +
+    '<div id="caseCount" style="color:var(--ink2);font-size:13px;margin-bottom:6px"></div><div class="tbl-wrap"><table class="t"><thead><tr><th>區域</th><th>派工編號</th><th>訂單編號</th><th>提報日</th><th>目前關卡</th><th>負責單位</th><th>狀態</th><th>經過天數</th><th>最後更新</th></tr></thead><tbody id="caseRows"></tbody></table></div></div>';
+  var upd = function () {
+    S.caseFilter = { region: $('#fRegion') ? $('#fRegion').value : '', q: $('#fQ').value.trim(), status: $('#fStatus').value, flag: $('#fFlag').value, step: $('#fStep').value, unit: $('#fUnit').value, from: $('#fFrom').value, to: $('#fTo').value };
+    var list = filteredCases();
+    $('#caseCount').textContent = '共 ' + list.length + ' 件';
+    $('#caseRows').innerHTML = list.map(function (c) {
+      var d = steps()[c.step];
+      return '<tr class="click" data-id="' + esc(c.id) + '"><td>' + esc(c.region || '') + '</td><td><b>' + esc(c.dispatchNo) + '</b></td><td>' + esc(c.orderNo) + '</td><td>' + c.createdAt.slice(0, 10) + '</td><td>' + esc(stepText(c)) +
+        (c.status === '已中止' ? '<div style="font-size:12px;color:var(--ink3)">' + esc(c.stopReason) + '</div>' : '') + '</td><td>' + (c.status === '進行中' && d ? esc(unitName(d.unit)) : '—') + '</td><td>' + statusChip(c) + '</td><td>' + ageDays(c) + '</td><td>' + short(c.updatedAt) + '</td></tr>';
+    }).join('') || '<tr><td colspan="9"><div class="empty">沒有符合的案件</div></td></tr>';
+    $$('#caseRows tr.click').forEach(function (r) { r.onclick = function () { openCase(r.dataset.id); }; });
+  };
+  ['#fRegion', '#fQ', '#fStatus', '#fFlag', '#fStep', '#fUnit', '#fFrom', '#fTo'].forEach(function (s) { if ($(s)) $(s).oninput = upd; });
+  $('#fClear').onclick = function () { S.caseFilter = {}; vCases(el); };
+  if ($('#fExport')) $('#fExport').onclick = function () { exportCases(filteredCases()); };
+  upd();
+}
+function filteredCases() {
+  var f = S.caseFilter, q = (f.q || '').toLowerCase();
+  return S.cases.filter(function (c) {
+    if (f.region && c.region !== f.region) return false;
+    if (f.status && c.status !== f.status) return false;
+    if (f.step && !(c.status === '進行中' && c.step === +f.step)) return false;
+    if (f.unit && !(c.status === '進行中' && steps()[c.step] && steps()[c.step].unit === f.unit)) return false;
+    if (f.from && c.createdAt.slice(0, 10) < f.from) return false;
+    if (f.to && c.createdAt.slice(0, 10) > f.to) return false;
+    if (f.flag) { var i = info(c); if (c.status !== '進行中') return false; if (f.flag === 'overdue' && !i.overdue) return false; if (f.flag === 'today' && !i.dueToday) return false; if (f.flag === 'wait' && !i.waiting) return false; }
+    if (q) { var hay = [c.dispatchNo, c.orderNo, c.stopReason, c.stopNote].concat(Object.keys(c.data).map(function (k) { return c.data[k].note; })).join(' ').toLowerCase(); if (hay.indexOf(q) < 0) return false; }
+    return true;
+  });
+}
+
+/* ---------- 匯出（依共用進度紀錄表欄位） ---------- */
+function stamp(rec) { return rec ? short(rec.at) + ' ' + (rec.byName || rec.by) : ''; }
+function vchk(v) { return v && v.vendorCheck ? short(v.vendorAt) + ' ' + v.vendorCheck : ''; }
+function exportCases(list) {
+  if (!window.XLSX) return toast('Excel 元件還在載入，請稍候再試', true);
+  var rows = list.map(function (c) {
+    var d = c.data, v = function (k) { return (d[k] || {}).values || {}; }, tg = function (k, t) { return (v(k).targets || {})[t] || ''; };
+    return {
+      '區域': c.region || '', '派工編號': c.dispatchNo, '訂單編號': c.orderNo, '訂購日期': c.orderDate, '狀態': c.status, '目前關卡': stepText(c),
+      '聯強反映給安麗日期': stamp(d.s1), '聯強端備註': (d.s1 || {}).note || '',
+      '客服受理': stamp(d.s2), '安麗客服備註': [v('s2').csNote, (d.s2 || {}).note].filter(Boolean).join('；'),
+      '15天聯絡機制 起算日': contactAnchor(c), '15天聯絡機制 轉ASS日': contactDue(contactAnchor(c), 5, userSms(c, 5)),
+      '第1次通知(給付通知) 使用者簡訊': short(tg('s3', '使用者')), '第1次 確認系統未結案': d.s3 ? v('s3').odoo + ' ' + stamp(d.s3) : '', '第1次 發信聯強確認': vchk(v('s3')),
+      '第2次通知(延遲通知/預告後果) 使用者簡訊': short(tg('s4', '使用者')), '第2次 上手白金簡訊': short(tg('s4', '上手白金')), '第2次 確認系統未結案': d.s4 ? v('s4').odoo + ' ' + stamp(d.s4) : '', '第2次 發信聯強確認': vchk(v('s4')),
+      '第3次通知(解除契約) 使用者簡訊': short(tg('s5', '使用者')), '第3次 上手白金簡訊': short(tg('s5', '上手白金')), 'AS400註記': short(v('s5').as400At), '第3次 確認系統未結案': d.s5 ? v('s5').odoo + ' ' + stamp(d.s5) : '', '第3次 發信聯強確認': vchk(v('s5')),
+      'ASS發信給聯強確認系統狀態': d.s6 ? short(v('s6').doneAt) + ' ' + (v('s6').vendorResult || '') + '（' + stamp(d.s6) + '）' : '',
+      'mail通知中心902退貨': d.s7 ? short(v('s7').doneAt) + '（' + stamp(d.s7) + '）' : '', '902退貨前 發信聯強確認': vchk(v('s7')),
+      '中心mail通知EZ虛收': d.s8 ? short(v('s8').doneAt) + '（' + stamp(d.s8) + '）' : '',
+      '售服以IA單同時調整01及61倉庫存': d.s9 ? short(v('s9').doneAt) + '（' + stamp(d.s9) + '）' : '',
+      '售服mail通知聯強入備品倉庫存，結案': d.s10 ? short(v('s10').doneAt) + '（' + stamp(d.s10) + '）' : '',
+      '中止原因': c.stopReason, '中止說明': c.stopNote, '中止時間': short(c.stopAt), '經過天數': ageDays(c)
+    };
+  });
+  saveXlsx([['案件總表', rows]], 'P單久置未取_案件_' + today() + '.xlsx');
+}
+function saveXlsx(sheets, name) {
+  var wb = XLSX.utils.book_new();
+  sheets.forEach(function (s) {
+    var ws = XLSX.utils.json_to_sheet(s[1].length ? s[1] : [{ '無資料': '' }]);
+    var keys = Object.keys(s[1][0] || { '無資料': '' });
+    ws['!cols'] = keys.map(function (k) { var m = k.length * 2; s[1].forEach(function (r) { m = Math.max(m, String(r[k] || '').length * 1.6); }); return { wch: Math.min(60, Math.max(10, m)) }; });
+    XLSX.utils.book_append_sheet(wb, ws, s[0]);
+  });
+  if (window.__saveFile) return window.__saveFile(name, XLSX.write(wb, { bookType: 'xlsx', type: 'array' }));
+  XLSX.writeFile(wb, name);
+  toast('已下載 ' + name);
+}
+
+/* ---------- 新增提報 ---------- */
+var TPL_COLS = ['派工編號(P單)', '聯強區域', '聯強備註'];
+function vNew(el) {
+  var rs = createRegions();
+  el.innerHTML = '<h2>新增提報（聯強）</h2>' +
+    (!rs.length ? '<div class="notice bad">您的帳號還沒設定區域，請洽管理員。</div>' : '') +
+    '<div class="panel"><h3>單筆提報</h3><div class="grid2">' +
+    '<div class="form-row"><label>派工編號（P單） <span class="req">*</span></label><input id="nNo" placeholder="例：20261020W001"></div>' +
+    '<div class="form-row"><label>聯強區域 <span class="req">*</span></label><select id="nRegion">' + (rs.length === 1 ? '' : '<option value="">請選擇</option>') +
+      rs.map(function (r) { return '<option>' + esc(r) + '</option>'; }).join('') + '</select></div></div>' +
+    '<div class="form-row"><label>聯強備註</label><textarea id="nNote" placeholder="例：10/17~10/19 三天三次電聯及簡訊，仍聯繫不上"></textarea></div>' +
+    '<div class="form-row"><label>附件／圖檔（可多選，每個 10MB 內）</label><input type="file" id="nFiles" multiple></div>' +
+    '<div class="notice info">送出時系統自動押提報日期時間，並發信通知安麗客服與該區聯強帳號。</div>' +
+    '<button class="btn pri" id="nSubmit">送出提報</button></div>' +
+    '<div class="panel"><h3>批次提報（Excel 上傳）</h3>' +
+    '<p style="color:var(--ink2);font-size:13px;margin-top:0">1. 先下載範本　2. 每列填一筆：<b>派工編號(P單)、聯強區域、聯強備註</b>（區域填 ' + esc(rs.join('、') || '北區、中區、南區') + '）　3. 存檔後上傳，確認預覽沒問題再送出。</p>' +
+    '<div class="actions" style="margin-bottom:10px"><button class="btn" id="bTpl">⬇ 下載 Excel 範本</button><label class="btn pri">⬆ 上傳填好的 Excel<input type="file" id="bFile" accept=".xlsx,.xls,.csv" hidden></label><span id="bName" style="color:var(--ink2);font-size:13px"></span></div>' +
+    '<div id="bPrev"></div><button class="btn pri" id="bSubmit" disabled>批次送出</button></div>';
+  $('#nSubmit').onclick = function () {
+    var no = $('#nNo').value.trim(); if (!no) return toast('請填派工編號', true);
+    var region = $('#nRegion').value; if (!region) return toast('請選擇聯強區域', true);
+    var files = Array.prototype.slice.call($('#nFiles').files);
+    if (!checkFiles(files)) return;
+    submitCreate([{ region: region, dispatchNo: no, note: $('#nNote').value.trim() }], false).then(function (res) {
+      if (res && res[0] && res[0].ok) {
+        return uploadFiles(res[0].id, 1, files).then(function () { toast('已提報 ' + no); vNew(el); });
+      }
+    });
+  };
+  $('#bTpl').onclick = function () {
+    if (!window.XLSX) return toast('Excel 元件還在載入，請稍候再試', true);
+    var ex = rs[0] || '北區';
+    var ws = XLSX.utils.aoa_to_sheet([TPL_COLS, ['20261020W001', ex, '10/17~10/19 三天三次電聯及簡訊，仍聯繫不上（範例，請刪除這列）']]);
+    ws['!cols'] = [{ wch: 20 }, { wch: 10 }, { wch: 60 }];
+    var wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, '批次提報');
+    var name = 'P單久置未取_批次提報範本.xlsx';
+    if (window.__saveFile) return window.__saveFile(name, XLSX.write(wb, { bookType: 'xlsx', type: 'array' }));
+    XLSX.writeFile(wb, name); toast('已下載 ' + name);
+  };
+  var parsed = [];
+  var draw = function () {
+    var running = {}; S.cases.forEach(function (c) { if (c.status === '進行中') running[c.dispatchNo] = 1; });
+    var seen = {};
+    parsed.forEach(function (p) {
+      p.err = !p.dispatchNo ? '派工編號空白' : !p.region ? '區域空白' : rs.indexOf(p.region) < 0 ? '不能提報「' + p.region + '」' : seen[p.dispatchNo] ? '檔案內重複' : running[p.dispatchNo] ? '已在流程中' : '';
+      if (p.dispatchNo) seen[p.dispatchNo] = 1;
+    });
+    var good = parsed.filter(function (p) { return !p.err; }).length;
+    $('#bPrev').innerHTML = parsed.length ? '<p style="font-size:13px;margin:0 0 6px">共 ' + parsed.length + ' 筆，可送出 <b>' + good + '</b> 筆' + (good < parsed.length ? '，<span style="color:var(--bad)">有問題的 ' + (parsed.length - good) + ' 筆不會送出</span>' : '') + '</p>' +
+      '<div class="tbl-wrap" style="max-height:300px;margin-bottom:10px"><table class="t"><tr><th>#</th><th>派工編號</th><th>區域</th><th>聯強備註</th><th>檢查</th></tr>' +
+      parsed.map(function (p, i) { return '<tr><td>' + (i + 1) + '</td><td>' + esc(p.dispatchNo) + '</td><td>' + esc(p.region) + '</td><td>' + esc(p.note) + '</td><td>' + (p.err ? '<span class="chip c-bad">' + esc(p.err) + '</span>' : '<span class="chip c-done">OK</span>') + '</td></tr>'; }).join('') + '</table></div>' : '';
+    $('#bSubmit').disabled = !good;
+  };
+  $('#bFile').onchange = function () {
+    var f = $('#bFile').files[0]; if (!f) return;
+    if (!window.XLSX) return toast('Excel 元件還在載入，請稍候再試', true);
+    $('#bName').textContent = f.name;
+    f.arrayBuffer().then(function (buf) {
+      var wb = XLSX.read(buf, { type: 'array' });
+      var rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, raw: false, defval: '' });
+      var head = (rows[0] || []).map(function (h) { return String(h).trim(); });
+      var col = function (re, d) { for (var i = 0; i < head.length; i++) if (re.test(head[i])) return i; return d; };
+      var ci = col(/派工|P單/, 0), cr = col(/區/, 1), cn = col(/備註/, 2);
+      var start = /派工|P單/.test(head.join('')) ? 1 : 0;
+      parsed = rows.slice(start).filter(function (r) { return r.some(function (x) { return String(x).trim(); }); })
+        .filter(function (r) { return !/範例/.test(String(r[cn] || '')); })
+        .map(function (r) { return { dispatchNo: String(r[ci] || '').trim(), region: String(r[cr] || '').trim().replace(/^(北|中|南)$/, '$1區'), note: String(r[cn] || '').trim() }; });
+      if (!parsed.length) toast('檔案裡沒有資料列', true);
+      draw();
+    }).catch(function (e) { toast('讀取 Excel 失敗：' + e.message, true); });
+    $('#bFile').value = '';
+  };
+  $('#bSubmit').onclick = function () {
+    var items = parsed.filter(function (p) { return !p.err; }).map(function (p) { return { dispatchNo: p.dispatchNo, region: p.region, note: p.note }; });
+    submitCreate(items, false).then(function (r) { if (r) { parsed = []; $('#bName').textContent = ''; draw(); } });
+  };
+}
+function createRegions() { return isAdmin() ? S.boot.regions : myRegions(); }
+function normDate(s) {
+  if (!s) return '';
+  var m = s.match(/^(\d{4})[\/\-.](\d{1,2})[\/\-.](\d{1,2})$/); if (m) return m[1] + '-' + pad(+m[2]) + '-' + pad(+m[3]);
+  if (/^\d{5}$/.test(s)) { var d = new Date(Date.UTC(1899, 11, 30) + s * 864e5); return d.toISOString().slice(0, 10); }
+  return s;
+}
+function submitCreate(items, force) {
+  return api('createCases', { items: items, force: force }).then(function (res) {
+    var dups = res.filter(function (r) { return r.dupClosed; });
+    var okN = res.filter(function (r) { return r.ok; }).length;
+    var fails = res.filter(function (r) { return !r.ok && !r.dupClosed; });
+    if (okN) toast('成功提報 ' + okN + ' 筆，已通知安麗客服');
+    if (fails.length) toast('未建立：' + fails.map(function (r) { return r.dispatchNo + '（' + r.error + '）'; }).join('、'), true);
+    var after = loadCases();
+    if (dups.length) {
+      return after.then(function () {
+        return confirmBox('這些派工編號以前處理過', '<p>' + dups.map(function (d) { return esc(d.dispatchNo); }).join('、') + ' 以前已結案或中止。確定要重新提報嗎？</p>', '重新提報').then(function (yes) {
+          if (!yes) return res;
+          return submitCreate(items.filter(function (it) { return dups.some(function (d) { return d.dispatchNo === it.dispatchNo; }); }), true).then(function (r2) {
+            return res.map(function (r) { var x = r2.filter(function (y) { return y.dispatchNo === r.dispatchNo; })[0]; return x || r; });
+          });
+        });
+      });
+    }
+    return after.then(function () { return res; });
+  }).catch(function (e) { toast(e.message, true); return null; });
+}
+
+/* ---------- 附件 ---------- */
+function checkFiles(files) {
+  var max = (S.boot.maxFileMb || 10) * 1048576;
+  var big = files.filter(function (f) { return f.size > max; });
+  if (big.length) { toast(big.map(function (f) { return f.name; }).join('、') + ' 超過 ' + S.boot.maxFileMb + 'MB', true); return false; }
+  return true;
+}
+function readB64(file) {
+  return new Promise(function (ok, no) { var r = new FileReader(); r.onload = function () { ok(String(r.result).split(',')[1] || ''); }; r.onerror = no; r.readAsDataURL(file); });
+}
+function uploadFiles(caseId, step, files) {
+  var chain = Promise.resolve(), okN = 0;
+  files.forEach(function (f, i) {
+    chain = chain.then(function () {
+      toast('上傳附件 ' + (i + 1) + '/' + files.length + '：' + f.name);
+      return readB64(f).then(function (b) { return api('uploadFile', { caseId: caseId, step: step, name: f.name, mime: f.type, base64: b }); }).then(function () { okN++; })
+        .catch(function (e) { toast(f.name + ' 上傳失敗：' + e.message, true); });
+    });
+  });
+  return chain.then(function () { return okN; });
+}
+function openFile(a) {
+  api('getFile', { id: a.id }).then(function (f) {
+    var bin = atob(f.base64), arr = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+    var url = URL.createObjectURL(new Blob([arr], { type: f.mime || 'application/octet-stream' }));
+    if (/^image\//.test(f.mime)) {
+      modal('<h3>' + esc(f.name) + '</h3><img src="' + url + '" alt=""><div class="actions">' + (window.__saveFile ? '' : '<a class="btn" href="' + url + '" download="' + esc(f.name) + '">下載</a>') + '<button class="btn pri" data-close>關閉</button></div>');
+    } else if (window.__saveFile) {
+      window.__saveFile(f.name, arr);
+    } else {
+      var a2 = document.createElement('a'); a2.href = url; a2.download = f.name; document.body.appendChild(a2); a2.click(); a2.remove();
+    }
+  }).catch(function (e) { toast(e.message, true); });
+}
+
+/* ---------- 對話框 ---------- */
+function modal(html, onMount) {
+  var root = $('#modalRoot');
+  root.innerHTML = '<div class="modal-bg"><div class="modal">' + html + '</div></div>';
+  var close = function () { root.innerHTML = ''; };
+  $$('[data-close]', root).forEach(function (b) { b.onclick = close; });
+  if (onMount) onMount(root.querySelector('.modal'), close);
+  return close;
+}
+function confirmBox(title, body, okText) {
+  return new Promise(function (resolve) {
+    modal('<h3>' + esc(title) + '</h3>' + body + '<div class="actions"><button class="btn" id="mNo">取消</button><button class="btn pri" id="mYes">' + esc(okText || '確定') + '</button></div>', function (m, close) {
+      $('#mNo', m).onclick = function () { close(); resolve(false); };
+      $('#mYes', m).onclick = function () { close(); resolve(true); };
+    });
+  });
+}
+
+/* ---------- 案件明細 ---------- */
+function openCase(id) {
+  S.openCaseId = id;
+  if (location.hash !== '#case-' + id) history.replaceState(null, '', '#case-' + id);
+  $('#drawerRoot').innerHTML = '<div class="overlay"><div class="drawer"><div class="dhead"><div class="row1"><span class="big">載入中…</span><button class="x" id="dClose">×</button></div></div></div></div>';
+  bindDrawerClose();
+  api('getCase', { id: id }).then(function (c) {
+    var i = S.cases.findIndex(function (x) { return x.id === c.id; }); var lite = Object.assign({}, c); delete lite.logs; delete lite.attachments;
+    if (i >= 0) S.cases[i] = lite; else S.cases.unshift(lite);
+    renderCase(c);
+  }).catch(function (e) { toast(e.message, true); closeDrawer(); });
+}
+function bindDrawerClose() {
+  $('#dClose').onclick = closeDrawer;
+  $('.overlay').onclick = function (e) { if (e.target.classList.contains('overlay')) closeDrawer(); };
+}
+function closeDrawer() {
+  if (!S.openCaseId) return;
+  S.openCaseId = null; $('#drawerRoot').innerHTML = '';
+  history.replaceState(null, '', location.pathname + location.search);
+  if (S.boot) render();
+}
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { if ($('#modalRoot').innerHTML) $('#modalRoot').innerHTML = ''; else closeDrawer(); } });
+
+function renderCase(c) {
+  var st = steps(), inf = info(c), cur = c.status === '進行中' ? c.step : 0;
+  var bar = ''; for (var n = 1; n <= 10; n++) {
+    if (n === 3) bar += '<div class="grp" title="' + esc(contact().group) + '">';
+    bar += '<div class="' + (c.data['s' + n] ? 'd' : n === cur ? (inf.waiting ? 'w' : 'c') : c.status === '已中止' && n === c.step ? 's' : '') + '" title="' + esc(st[n].title) + '"></div>';
+    if (n === 5) bar += '</div>';
+  }
+  var html = '<div class="dhead"><div class="row1"><span class="big">' + esc(c.dispatchNo) + '</span>' + statusChip(c) + '<button class="x" id="dClose">×</button></div>' +
+    '<div class="info">訂單編號 ' + esc(c.orderNo || '—') + '・訂購日期 ' + esc(c.orderDate || '—') + '・提報 ' + short(c.createdAt) + '・經過 ' + ageDays(c) + ' 天</div><div class="stepper">' + bar + '</div></div><div class="dbody">';
+  if (c.status === '已中止') html += '<div class="notice bad"><b>已中止：' + esc(c.stopReason) + '</b>' + (c.stopNote ? '，' + esc(c.stopNote) : '') + '<br>' + short(c.stopAt) + ' ' + esc(c.stopBy) + '</div>';
+  if (c.status === '已結案') html += '<div class="notice ok"><b>已結案</b>，' + short((c.data.s10 || {}).at) + '</div>';
+  html += '<div class="tl">';
+  for (n = 1; n <= 10; n++) {
+    if (n === 3) html += contactHead(c);
+    html += stepItem(c, n, inf);
+    if (n === 5) html += '</div>';
+  }
+  html += '</div>';
+  var acts = [];
+  if (c.status === '進行中') acts.push('<button class="btn danger" id="aStop">中止案件（客人已聯繫上／已取貨等）</button>');
+  if (isAdmin() && c.status === '進行中' && c.step > 2) acts.push('<button class="btn" id="aRevert">退回上一關</button>');
+  if (isAdmin() && c.status === '已中止') acts.push('<button class="btn" id="aReopen">重新開啟案件</button>');
+  if (acts.length) html += '<div class="panel"><h3>其他操作</h3><div class="actions">' + acts.join('') + '</div></div>';
+  html += '<details class="logs panel"><summary>本案操作紀錄（' + (c.logs || []).length + ' 筆）</summary><div class="tbl-wrap"><table class="t"><tr><th>時間</th><th>帳號</th><th>單位</th><th>動作</th><th>關卡</th><th>內容</th></tr>' +
+    (c.logs || []).slice().reverse().map(function (l) { return '<tr><td style="white-space:nowrap">' + esc(l.ts) + '</td><td>' + esc(l.name || l.email) + '<div style="font-size:12px;color:var(--ink3)">' + esc(l.email) + '</div></td><td>' + esc(unitName(l.unit)) + '</td><td>' + esc(l.action) + '</td><td>' + esc(l.step) + '</td><td>' + esc(l.detail) + '</td></tr>'; }).join('') + '</table></div></details></div>';
+  $('.drawer').innerHTML = html;
+  bindDrawerClose();
+  bindCase(c);
+  var curEl = $('.tli.c', $('.drawer')) || $('.tli.w', $('.drawer'));
+  if (curEl && c.step > 3) setTimeout(function () { curEl.scrollIntoView({ block: 'start' }); $('.drawer').scrollTop -= 130; }, 0);
+}
+function contactHead(c) {
+  var k = contact(), a = contactAnchor(c), cur = c.status === '進行中' ? c.step : 0, chip;
+  if (c.data.s5) chip = '<span class="chip c-done">3 次聯絡完成</span>';
+  else if (!a) chip = '<span class="chip c-wait">第1次聯絡發出後開始計算</span>';
+  else if (cur) chip = '<span class="chip c-run">第 ' + contactDay(c) + ' 天／共 ' + k.total + ' 天</span>';
+  else chip = '';
+  var plan = [
+    ['第1次聯絡', a || '—', 3], ['第2次聯絡', contactDue(a, 3, userSms(c, 3)) || '第7天', 4],
+    ['第3次聯絡', contactDue(a, 4, userSms(c, 4)) || '第14天', 5], ['轉 ASS', contactDue(a, 5, userSms(c, 5)) || '第15天', 6]
+  ].map(function (p) {
+    var done = p[2] <= 5 ? !!c.data['s' + p[2]] : !!c.data.s5, real = p[2] <= 5 ? userSms(c, p[2]) : '';
+    return '<div class="' + (done ? 'd' : cur === p[2] ? 'c' : '') + '">' + p[0] + '<b>' + esc(real || p[1]) + '</b>' + (done ? '已完成' : real ? '' : (a ? '預定' : '')) + '</div>';
+  }).join('');
+  return '<div class="cgroup"><div class="cg-hd">' + esc(k.group) + chip + '</div>' +
+    '<div style="font-size:12px;color:var(--ink2);margin:-2px 0 8px">從第1次聯絡（使用者簡訊日）起算，第7天第2次、第14天第3次、第15天轉 ASS</div><div class="cg-plan">' + plan + '</div>';
+}
+function attList(c, n) {
+  return (c.attachments || []).filter(function (a) { return +a.step === n; });
+}
+function stepItem(c, n, inf) {
+  var d = steps()[n], rec = c.data['s' + n], cur = c.status === '進行中' && c.step === n;
+  var cls = rec ? 'd' : cur ? (inf.waiting ? 'w' : 'c') : (c.status === '已中止' && c.step === n ? 'x' : 'f');
+  var h = '<div class="tli ' + cls + '" data-step="' + n + '"><div class="dot">' + (rec ? '✓' : n) + '</div><div class="tt">' + esc(stepTitle(d)) + '<span class="chip c-run">' + esc(unitName(d.unit)) + '</span></div>';
+  if (rec) {
+    h += '<div class="by">' + userLabel(rec) + '・' + esc(rec.at) + (rec.editedAt ? '・<span style="color:var(--warn)">管理員 ' + esc(rec.editedBy) + ' 於 ' + esc(rec.editedAt) + ' 修改過</span>' : '') + '</div>';
+    var lines = valueLines(d, rec);
+    if (lines.length) h += '<div class="vals">' + lines.join('') + '</div>';
+  }
+  var atts = attList(c, n);
+  if (atts.length) h += '<div class="atts">' + atts.map(function (a) { return '<span class="att" data-att="' + esc(a.id) + '">📎 ' + esc(a.name) + (isAdmin() ? ' <b data-delatt="' + esc(a.id) + '" title="刪除" style="color:var(--bad)">×</b>' : '') + '</span>'; }).join('') + '</div>';
+  if (rec && canAct(d.unit)) h += '<div class="actions"><label class="btn sm">補上傳附件<input type="file" multiple hidden data-addfile="' + n + '"></label>' + (isAdmin() ? '<button class="btn sm" data-edit="' + n + '">修改</button>' : '') + '</div>';
+  if (cur) {
+    if (inf.waiting) {
+      h += '<div class="notice wait">' + esc(contact().group) + (contactDay(c) ? ' 第 ' + contactDay(c) + ' 天' : '') + '：' + esc(c.availableAt.slice(0, 10)) + ' 起可做（剩 ' + inf.waitLeft + ' 天），當天系統會寄信提醒' + esc(unitName(d.unit)) + '。</div>';
+      if (isAdmin()) h += '<button class="btn sm" id="earlyBtn">管理員提前操作</button><div id="earlyForm" class="hidden">' + stepForm(c, d) + '</div>';
+    } else if (canAct(d.unit)) {
+      h += stepForm(c, d);
+    } else {
+      h += '<div class="notice info">等待「' + esc(unitName(d.unit)) + '」處理' + (inf.waited ? '（已 ' + inf.waited + ' 天）' : '') + '</div>';
+    }
+  }
+  return h + '</div>';
+}
+function valueLines(d, rec) {
+  var v = rec.values || {}, out = [];
+  if (v.targets) Object.keys(v.targets).forEach(function (t) { out.push('<div>📱 簡訊給<b>' + esc(t) + '</b>：' + esc(short(v.targets[t])) + '</div>'); });
+  if (v.as400At) out.push('<div>AS400 註記：' + esc(short(v.as400At)) + '</div>');
+  if (v.odoo) out.push('<div>ODOO 系統狀態：<b>' + esc(v.odoo) + '</b></div>');
+  if (v.vendorCheck) out.push('<div>✉️ 發信向聯強確認：' + esc(short(v.vendorAt)) + '，<b>' + esc(v.vendorCheck) + '</b></div>');
+  (d.fields || []).forEach(function (f) { if (v[f.key]) out.push('<div>' + esc(f.label) + '：' + esc(f.type === 'datetime' ? short(v[f.key]) : v[f.key]) + '</div>'); });
+  if (rec.note) out.push('<div>' + (d.no === 1 ? '聯強端備註' : '備註') + '：' + esc(rec.note) + '</div>');
+  return out;
+}
+
+/* 簡訊範本 */
+function smsText(c, notice, target, smsDT) {
+  var key = (target === '上手白金' ? 'tpl_plat_' : 'tpl_user_') + notice;
+  var tpl = S.boot.settings[key]; if (!tpl) return '';
+  var d = c.data;
+  var prev = notice === 1 ? (d.s2 || {}).at : notice === 2 ? ((d.s3 || {}).values || { targets: {} }).targets['使用者'] : ((d.s4 || {}).values || { targets: {} }).targets['使用者'];
+  var smsDay = (smsDT || '').slice(0, 10);
+  var map = {
+    '派工編號': c.dispatchNo, '訂單編號': c.orderNo || 'OO/GGXXXXXXX', '訂購日期': c.orderDate ? zh(c.orderDate) : 'OOOO年OO月OO日',
+    '聯強反映日': zh((d.s1 || {}).at), '前次簡訊日': prev ? zh(prev) : 'OOOO年OO月OO日', '簡訊日': smsDay ? zh(smsDay) : 'OOOO年OO月OO日', '期限': smsDay ? zh(contactDue(notice === 1 ? smsDay : contactAnchor(c), notice + 2, smsDay)) : 'OOOO年OO月OO日'
+  };
+  return tpl.replace(/\{([^}]+)\}/g, function (m, k) { return k in map ? map[k] : m; });
+}
+function stepForm(c, d, rec) {
+  var v = (rec && rec.values) || {};
+  var h = '<div class="stepform" data-form="' + d.no + '">';
+  if (d.targets) {
+    h += '<div style="font-weight:700;margin-bottom:8px">勾選已發送簡訊的對象，並填發送日期時間</div>';
+    d.targets.forEach(function (t) {
+      var val = v.targets && v.targets[t] ? v.targets[t].slice(0, 16).replace(' ', 'T') : '';
+      var sms = smsText(c, d.notice, t, val || nowLocal());
+      h += '<div class="target" data-target="' + esc(t) + '"><div class="hd"><label><input type="checkbox" class="tgChk"' + (val ? ' checked' : '') + '> 已發簡訊給「' + esc(t) + '」</label>' +
+        '<input type="datetime-local" class="tgDT" value="' + (val || nowLocal()) + '"' + (val ? '' : ' disabled') + '></div>' +
+        (sms ? '<div class="sms">' + esc(sms) + '</div><div class="sms-bar"><span>範本已自動帶入派工編號與日期，OOO 部分請自行修改</span><button class="btn sm cpy">複製簡訊</button></div>' : '<div class="sms-bar"><span>此次通知依規定不需發給' + esc(t) + '</span></div>') + '</div>';
+    });
+  }
+  if (d.as400) h += '<div class="target"><div class="hd"><label><input type="checkbox" id="as400Chk"' + (v.as400At ? ' checked' : '') + '> 已於 AS400 註記</label><input type="datetime-local" id="as400DT" value="' + (v.as400At ? v.as400At.slice(0, 16).replace(' ', 'T') : nowLocal()) + '"' + (v.as400At ? '' : ' disabled') + '></div></div>';
+  if (d.vendorCheck) {
+    var vr = S.boot.vendorResults || [];
+    h += '<div class="target vcheck"><div class="hd"><label><input type="checkbox" id="vChk"' + (v.vendorAt ? ' checked' : '') + '> 已發信向聯強確認此案件狀態</label><input type="datetime-local" id="vDT" value="' + (v.vendorAt ? v.vendorAt.slice(0, 16).replace(' ', 'T') : nowLocal()) + '"' + (v.vendorAt ? '' : ' disabled') + '></div>' +
+      '<div class="form-row" style="margin:8px 0 0"><label>聯強回覆（應為未結案、且聯強沒有約定到府）</label><select id="vSel"><option value="">請選擇</option>' + vr.map(function (o) { return '<option' + (v.vendorCheck === o ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('') + '</select></div>' +
+      '<div class="sms-bar"><span>選「已結案」或「已約到府」送出後，案件會自動中止並通知聯強與客服</span></div></div>';
+  }
+  if (d.odoo && rec) h += '<div class="form-row"><label>ODOO 系統狀態</label><select id="odooSel"><option' + (v.odoo === '未結案' ? ' selected' : '') + '>未結案</option><option' + (v.odoo === '已結案' ? ' selected' : '') + '>已結案</option></select></div>';
+  (d.fields || []).forEach(function (f) {
+    var val = v[f.key] || '';
+    h += '<div class="form-row"><label>' + esc(f.label) + (f.required ? ' <span class="req">*</span>' : '') + '</label>';
+    if (f.type === 'datetime') h += '<input type="datetime-local" data-f="' + f.key + '" value="' + (val ? val.slice(0, 16).replace(' ', 'T') : nowLocal()) + '">';
+    else if (f.type === 'text') h += '<input data-f="' + f.key + '" value="' + esc(val) + '">';
+    else if (f.type === 'date') h += '<input type="date" data-f="' + f.key + '" value="' + esc(val) + '">';
+    else if (f.type === 'select') h += '<select data-f="' + f.key + '">' + f.options.map(function (o) { return '<option' + (o === val ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('') + '</select>';
+    else h += '<textarea data-f="' + f.key + '">' + esc(val) + '</textarea>';
+    h += '</div>';
+  });
+  h += '<div class="form-row"><label>' + (d.no === 1 ? '聯強端備註' : '備註') + '</label><textarea class="fNote">' + esc(rec ? rec.note : '') + '</textarea></div>';
+  if (!rec) h += '<div class="form-row"><label>附件／圖檔（可多選，每個 ' + S.boot.maxFileMb + 'MB 內）</label><input type="file" class="fFiles" multiple></div>';
+  if (d.no === 6 && !rec) h += '<div class="notice info">若聯強回覆「已結案／已處理」，送出後案件會自動中止。</div>';
+  h += '<div class="actions"><button class="btn pri fSubmit">' + (rec ? '儲存修改' : '完成這一關') + '</button>' + (rec ? '<button class="btn fCancel">取消</button>' : '') + '</div></div>';
+  return h;
+}
+function collect(form, d) {
+  var v = {};
+  if (d.targets) {
+    v.targets = {};
+    var miss = [];
+    $$('.target[data-target]', form).forEach(function (t) {
+      var chk = $('.tgChk', t).checked, dt = $('.tgDT', t).value;
+      if (chk && dt) v.targets[t.dataset.target] = dt; else miss.push(t.dataset.target);
+    });
+    if (miss.length) throw new Error('請勾選並填寫：' + miss.join('、') + ' 的簡訊發送時間');
+  }
+  if (d.as400) { if (!$('#as400Chk', form).checked || !$('#as400DT', form).value) throw new Error('請勾選已於 AS400 註記並填時間'); v.as400At = $('#as400DT', form).value; }
+  if ($('#odooSel', form)) v.odoo = $('#odooSel', form).value;
+  if (d.vendorCheck) {
+    if (!$('#vChk', form).checked || !$('#vDT', form).value) throw new Error('請勾選「已發信向聯強確認」並填發信時間');
+    if (!$('#vSel', form).value) throw new Error('請選擇聯強回覆的案件狀態');
+    v.vendorAt = $('#vDT', form).value; v.vendorCheck = $('#vSel', form).value;
+  }
+  $$('[data-f]', form).forEach(function (el) { v[el.dataset.f] = el.value; });
+  (d.fields || []).forEach(function (f) { if (f.required && !v[f.key]) throw new Error('請填「' + f.label + '」'); });
+  return v;
+}
+function bindForm(form, c, d, rec) {
+  $$('.target[data-target]', form).forEach(function (t) {
+    var chk = $('.tgChk', t), dt = $('.tgDT', t), sms = $('.sms', t), cpy = $('.cpy', t);
+    chk.onchange = function () { dt.disabled = !chk.checked; };
+    dt.oninput = function () { if (sms) sms.textContent = smsText(c, d.notice, t.dataset.target, dt.value); };
+    if (cpy) cpy.onclick = function () {
+      var txt = sms.textContent;
+      (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(function () { toast('已複製簡訊內容'); }).catch(function () {
+        var ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); toast('已複製簡訊內容');
+      });
+    };
+  });
+  var a4 = $('#as400Chk', form); if (a4) a4.onchange = function () { $('#as400DT', form).disabled = !a4.checked; };
+  var cancel = $('.fCancel', form); if (cancel) cancel.onclick = function () { openCase(c.id); };
+  $('.fSubmit', form).onclick = function () {
+    var v, files = [];
+    try { v = collect(form, d); } catch (e) { return toast(e.message, true); }
+    var note = $('.fNote', form).value.trim();
+    if ($('.fFiles', form)) { files = Array.prototype.slice.call($('.fFiles', form).files); if (!checkFiles(files)) return; }
+    var go = function () {
+      var btn = $('.fSubmit', form); btn.disabled = true;
+      var call = rec ? api('editStep', { caseId: c.id, step: d.no, values: v, note: note }) : api('submitStep', { caseId: c.id, step: d.no, values: v, note: note });
+      call.then(function (res) {
+        return uploadFiles(c.id, d.no, files).then(function () {
+          if (res.status === '已中止') toast('已記錄，案件中止：' + res.stopReason);
+          else if (res.status === '已結案') toast('🎉 案件已結案');
+          else toast(rec ? '已儲存修改' : '已完成「' + d.title + '」');
+          return loadCases().then(function () { openCase(c.id); });
+        });
+      }).catch(function (e) { btn.disabled = false; toast(e.message, true); });
+    };
+    if (d.odoo && !rec) {
+      modal('<h3>請先到 ODOO 查系統狀態</h3><div class="notice info">派工編號 <b>' + esc(c.dispatchNo) + '</b>' + (c.orderNo ? '／訂單 <b>' + esc(c.orderNo) + '</b>' : '') + '<br>請到 ODOO 系統確認此訂單目前是否「未結案」。</div>' +
+        '<p style="font-size:14px;color:var(--ink2)">選「未結案」會繼續流程' + (d.waitAfter ? '，下一關日期依 15 天聯絡機制自動計算（第1次聯絡日起第7天第2次、第14天第3次、第15天轉 ASS）' : '') + '；選「已結案」案件會中止。</p>' +
+        '<div class="actions"><button class="btn" data-close>取消</button><button class="btn" id="oClosed">ODOO 已結案（中止）</button><button class="btn pri" id="oOpen">ODOO 未結案，繼續</button></div>', function (m, close) {
+        $('#oOpen', m).onclick = function () { v.odoo = '未結案'; close(); go(); };
+        $('#oClosed', m).onclick = function () { v.odoo = '已結案'; close(); go(); };
+      });
+    } else go();
+  };
+}
+function bindCase(c) {
+  var dr = $('.drawer');
+  $$('.stepform', dr).forEach(function (form) { var d = steps()[+form.dataset.form]; bindForm(form, c, d, null); });
+  var eb = $('#earlyBtn'); if (eb) eb.onclick = function () { $('#earlyForm').classList.remove('hidden'); eb.remove(); };
+  $$('[data-att]', dr).forEach(function (el) { el.onclick = function (e) { if (e.target.dataset.delatt) return; openFile((c.attachments || []).filter(function (a) { return a.id === el.dataset.att; })[0]); }; });
+  $$('[data-delatt]', dr).forEach(function (el) { el.onclick = function () {
+    confirmBox('刪除附件', '<p>檔案會移到 Google Drive 垃圾桶（30 天內可救回），並留下刪除紀錄。</p>', '刪除').then(function (y) { if (y) api('deleteFile', { id: el.dataset.delatt }).then(function () { toast('已刪除'); openCase(c.id); }).catch(function (e) { toast(e.message, true); }); });
+  }; });
+  $$('[data-addfile]', dr).forEach(function (inp) { inp.onchange = function () {
+    var files = Array.prototype.slice.call(inp.files); if (!files.length || !checkFiles(files)) return;
+    uploadFiles(c.id, +inp.dataset.addfile, files).then(function (n) { if (n) toast('已上傳 ' + n + ' 個附件'); openCase(c.id); });
+  }; });
+  $$('[data-edit]', dr).forEach(function (b) { b.onclick = function () {
+    var n = +b.dataset.edit, d = steps()[n], item = $('.tli[data-step="' + n + '"]', dr);
+    var old = $('.stepform', item); if (old) return;
+    var wrap = document.createElement('div'); wrap.innerHTML = stepForm(c, d, c.data['s' + n]); item.appendChild(wrap.firstChild);
+    bindForm($('.stepform', item), c, d, c.data['s' + n]);
+  }; });
+  var st = $('#aStop'); if (st) st.onclick = function () {
+    modal('<h3>中止案件 ' + esc(c.dispatchNo) + '</h3><div class="form-row"><label>中止原因 <span class="req">*</span></label><select id="sR">' + S.boot.stopReasons.map(function (r) { return '<option>' + esc(r) + '</option>'; }).join('') + '</select></div>' +
+      '<div class="form-row"><label>說明</label><textarea id="sN" placeholder="例：客人 10/25 回電，約 10/28 安裝"></textarea></div><div class="notice info">系統會發信通知聯強與安麗客服。</div>' +
+      '<div class="actions"><button class="btn" data-close>取消</button><button class="btn pri" id="sOk">確定中止</button></div>', function (m, close) {
+      $('#sOk', m).onclick = function () {
+        api('stopCase', { caseId: c.id, reason: $('#sR', m).value, note: $('#sN', m).value.trim() }).then(function () { close(); toast('案件已中止'); return loadCases().then(function () { openCase(c.id); }); }).catch(function (e) { toast(e.message, true); });
+      };
+    });
+  };
+  var rv = $('#aRevert'); if (rv) rv.onclick = function () {
+    var prev = steps()[c.step - 1];
+    modal('<h3>退回上一關</h3><p>會清除「' + esc(prev.title) + '」的完成紀錄（操作紀錄會保留被清除的內容），讓該單位重做。</p><div class="form-row"><label>退回原因</label><textarea id="rN"></textarea></div><div class="actions"><button class="btn" data-close>取消</button><button class="btn pri" id="rOk">確定退回</button></div>', function (m, close) {
+      $('#rOk', m).onclick = function () { api('revertStep', { caseId: c.id, note: $('#rN', m).value.trim() }).then(function () { close(); toast('已退回'); return loadCases().then(function () { openCase(c.id); }); }).catch(function (e) { toast(e.message, true); }); };
+    });
+  };
+  var ro = $('#aReopen'); if (ro) ro.onclick = function () {
+    confirmBox('重新開啟案件', '<p>案件會回到中止時的那一關繼續處理。</p>', '重新開啟').then(function (y) { if (y) api('reopenCase', { caseId: c.id }).then(function () { toast('已重新開啟'); return loadCases().then(function () { openCase(c.id); }); }).catch(function (e) { toast(e.message, true); }); });
+  };
+}
+
+/* ---------- 報表 ---------- */
+function vReport(el) {
+  el.innerHTML = '<h2>報表查詢</h2><div class="subtabs">' + [['stats', '統計'], ['logs', '操作紀錄']].map(function (t) { return '<button data-t="' + t[0] + '" class="' + (S.reportTab === t[0] ? 'on' : '') + '">' + t[1] + '</button>'; }).join('') + '</div><div id="rBody"></div>';
+  $$('.subtabs button', el).forEach(function (b) { b.onclick = function () { S.reportTab = b.dataset.t; vReport(el); }; });
+  (S.reportTab === 'logs' ? rLogs : rStats)($('#rBody'));
+}
+function regionStats(cs) {
+  var rs = seesAllRegions() ? S.boot.regions : myRegions();
+  var m = today().slice(0, 7);
+  var row = function (list) {
+    return { n: list.length, month: list.filter(function (c) { return c.createdAt.slice(0, 7) === m; }).length, run: list.filter(function (c) { return c.status === '進行中'; }).length,
+      done: list.filter(function (c) { return c.status === '已結案'; }).length, stop: list.filter(function (c) { return c.status === '已中止'; }).length };
+  };
+  var rows = rs.map(function (r) { return [r, row(cs.filter(function (c) { return c.region === r; }))]; });
+  if (rs.length > 1) rows.push(['合計', row(cs.filter(function (c) { return rs.indexOf(c.region) >= 0; }))]);
+  var max = Math.max.apply(null, [1].concat(rows.slice(0, rs.length).map(function (x) { return x[1].n; })));
+  return '<div class="panel" id="regionStats"><h3>聯強各區提報件數</h3><div class="tbl-wrap"><table class="t"><tr><th>區域</th><th>累計提報</th><th style="width:30%"></th><th>本月提報</th><th>進行中</th><th>已結案</th><th>已中止</th></tr>' +
+    rows.map(function (x) { var v = x[1], tot = x[0] === '合計'; return '<tr' + (tot ? ' style="font-weight:700;background:var(--bg)"' : '') + '><td>' + esc(x[0]) + '</td><td style="font-size:18px;font-weight:700">' + v.n + '</td><td>' + (tot ? '' : '<div style="height:10px;border-radius:5px;background:var(--brand2);width:' + (v.n / max * 100) + '%"></div>') + '</td><td>' + v.month + '</td><td>' + v.run + '</td><td>' + v.done + '</td><td>' + v.stop + '</td></tr>'; }).join('') +
+    '</table></div></div>';
+}
+function rStats(el) {
+  var cs = S.cases, run = cs.filter(function (c) { return c.status === '進行中'; });
+  var byStep = {}; run.forEach(function (c) { byStep[c.step] = (byStep[c.step] || 0) + 1; });
+  var maxN = Math.max.apply(null, [1].concat(Object.keys(byStep).map(function (k) { return byStep[k]; })));
+  var months = {};
+  cs.forEach(function (c) {
+    var m = c.createdAt.slice(0, 7); (months[m] = months[m] || { n: 0, done: 0, stop: 0 }).n++;
+    if (c.status === '已結案') { var mm = ((c.data.s10 || {}).at || c.updatedAt).slice(0, 7); (months[mm] = months[mm] || { n: 0, done: 0, stop: 0 }).done++; }
+    if (c.status === '已中止') { var ms = (c.stopAt || c.updatedAt).slice(0, 7); (months[ms] = months[ms] || { n: 0, done: 0, stop: 0 }).stop++; }
+  });
+  var reasons = {}; cs.filter(function (c) { return c.status === '已中止'; }).forEach(function (c) { reasons[c.stopReason] = (reasons[c.stopReason] || 0) + 1; });
+  // 各關平均處理天數：上一關完成（或 15 天聯絡機制的可做日）→ 本關完成
+  var dur = {};
+  cs.forEach(function (c) { for (var n = 2; n <= 10; n++) { var a = c.data['s' + (n - 1)], b = c.data['s' + n]; if (a && b) { var dd = (new Date(b.at.replace(' ', 'T')) - new Date(a.at.replace(' ', 'T'))) / 864e5; if (steps()[n - 1].waitAfter) { var due = contactDue(contactAnchor(c), n - 1, userSms(c, n - 1)); if (due) dd = (new Date(b.at.replace(' ', 'T')) - new Date(due + 'T00:00:00')) / 864e5; } (dur[n] = dur[n] || []).push(Math.max(0, dd)); } } });
+  var closed = cs.filter(function (c) { return c.status === '已結案'; });
+  var avgAll = closed.length ? (closed.reduce(function (s, c) { return s + ageDays(c); }, 0) / closed.length).toFixed(1) : '—';
+  el.innerHTML = '<div class="kpis">' +
+    '<div class="kpi"><b>' + cs.length + '</b><span>累計提報</span></div><div class="kpi"><b>' + run.length + '</b><span>進行中</span></div>' +
+    '<div class="kpi ok"><b>' + closed.length + '</b><span>已結案（退貨入庫）</span></div><div class="kpi wait"><b>' + cs.filter(function (c) { return c.status === '已中止'; }).length + '</b><span>已中止（含聯繫上）</span></div>' +
+    '<div class="kpi warn"><b>' + avgAll + '</b><span>結案平均天數</span></div><div class="kpi bad"><b>' + run.filter(function (c) { return info(c).overdue; }).length + '</b><span>目前逾期</span></div></div>' +
+    regionStats(cs) +
+    '<div class="grid2" style="gap:16px"><div class="panel"><h3>進行中案件卡在哪一關</h3><div class="bars">' +
+    steps().slice(2).map(function (d) { var n = byStep[d.no] || 0; return '<div class="bar"><span>' + d.no + '. ' + esc(d.short) + '</span><i style="width:' + (n / maxN * 100) + '%"></i><b>' + n + '</b></div>'; }).join('') + '</div></div>' +
+    '<div class="panel"><h3>各關平均處理天數</h3><p style="font-size:12px;color:var(--ink3);margin:-4px 0 8px">從上一關完成到這一關完成；15 天聯絡機制內的關卡從可做日起算</p><div class="bars">' +
+    steps().slice(2).map(function (d) { var a = dur[d.no]; var avg = a ? a.reduce(function (s, x) { return s + x; }, 0) / a.length : 0; return '<div class="bar"><span>' + d.no + '. ' + esc(d.short) + '</span><i style="width:' + Math.min(100, avg / 5 * 100) + '%;background:' + (avg > +(S.boot.settings.OVERDUE_DAYS || 2) ? 'var(--bad)' : 'var(--ok)') + '"></i><b>' + (a ? avg.toFixed(1) : '—') + '</b></div>'; }).join('') + '</div></div></div>' +
+    '<div class="grid2" style="gap:16px"><div class="panel"><h3>每月件數</h3><table class="t"><tr><th>月份</th><th>新提報</th><th>結案</th><th>中止</th></tr>' +
+    Object.keys(months).sort().reverse().map(function (m) { var x = months[m]; return '<tr><td>' + m + '</td><td>' + x.n + '</td><td>' + x.done + '</td><td>' + x.stop + '</td></tr>'; }).join('') + '</table></div>' +
+    '<div class="panel"><h3>中止原因</h3><table class="t"><tr><th>原因</th><th>件數</th></tr>' + (Object.keys(reasons).map(function (r) { return '<tr><td>' + esc(r) + '</td><td>' + reasons[r] + '</td></tr>'; }).join('') || '<tr><td colspan="2">無</td></tr>') + '</table></div></div>' +
+    (isAdmin() ? '<button class="btn pri" id="sExport">匯出全部案件 Excel</button>' : '');
+  if ($('#sExport')) $('#sExport').onclick = function () { exportCases(S.cases); };
+}
+function rLogs(el) {
+  var f = S.logFilter || { from: addDays(today(), -30), to: today() };
+  el.innerHTML = '<div class="panel"><div class="tools"><label>日期</label><input type="date" id="lFrom" value="' + f.from + '"><span>～</span><input type="date" id="lTo" value="' + f.to + '"><button class="btn pri" id="lLoad">查詢</button>' +
+    '<input type="search" id="lQ" placeholder="篩選帳號、派工編號、內容" value="' + esc(f.q || '') + '"><select id="lUnit"><option value="">全部單位</option>' + Object.keys(S.boot.units).map(function (u) { return '<option value="' + u + '"' + (f.unit === u ? ' selected' : '') + '>' + unitName(u) + '</option>'; }).join('') + '</select>' +
+    '<select id="lAct"><option value="">全部動作</option></select>' + (isAdmin() ? '<button class="btn" id="lExport">匯出 Excel</button>' : '') + '</div><div id="lCount" style="color:var(--ink2);font-size:13px;margin-bottom:6px"></div>' +
+    '<div class="tbl-wrap" style="max-height:65vh"><table class="t"><thead><tr><th>時間</th><th>帳號</th><th>單位</th><th>動作</th><th>派工編號</th><th>關卡</th><th>內容</th></tr></thead><tbody id="lRows"></tbody></table></div></div>';
+  var shown = [];
+  var draw = function () {
+    f.q = $('#lQ').value.trim().toLowerCase(); f.unit = $('#lUnit').value; f.act = $('#lAct').value; S.logFilter = f;
+    shown = (S.logs || []).filter(function (l) {
+      if (f.unit && l.unit !== f.unit) return false; if (f.act && l.action !== f.act) return false;
+      if (f.q && [l.email, l.name, l.dispatchNo, l.detail].join(' ').toLowerCase().indexOf(f.q) < 0) return false; return true;
+    }).reverse();
+    $('#lCount').textContent = '共 ' + shown.length + ' 筆';
+    $('#lRows').innerHTML = shown.slice(0, 1000).map(function (l) {
+      return '<tr><td style="white-space:nowrap">' + esc(l.ts) + '</td><td>' + esc(l.name) + '<div style="font-size:12px;color:var(--ink3)">' + esc(l.email) + '</div></td><td>' + esc(unitName(l.unit)) + '</td><td>' + esc(l.action) + '</td><td>' +
+        (l.caseId ? '<a href="#case-' + esc(l.caseId) + '">' + esc(l.dispatchNo) + '</a>' : '') + '</td><td>' + esc(l.step ? (steps()[+l.step] || {}).short || l.step : '') + '</td><td style="max-width:380px;word-break:break-all">' + esc(l.detail) + '</td></tr>';
+    }).join('') || '<tr><td colspan="7"><div class="empty">沒有紀錄</div></td></tr>';
+  };
+  var load = function () {
+    f.from = $('#lFrom').value; f.to = $('#lTo').value;
+    api('listLogs', { from: f.from, to: f.to }).then(function (logs) {
+      S.logs = logs;
+      var acts = {}; logs.forEach(function (l) { acts[l.action] = 1; });
+      $('#lAct').innerHTML = '<option value="">全部動作</option>' + Object.keys(acts).map(function (a) { return '<option' + (f.act === a ? ' selected' : '') + '>' + esc(a) + '</option>'; }).join('');
+      draw();
+    }).catch(function (e) { toast(e.message, true); });
+  };
+  $('#lLoad').onclick = load; $('#lQ').oninput = draw; $('#lUnit').onchange = draw; $('#lAct').onchange = draw;
+  if ($('#lExport')) $('#lExport').onclick = function () { saveXlsx([['操作紀錄', shown.map(function (l) { return { '時間': l.ts, '帳號': l.email, '姓名': l.name, '單位': unitName(l.unit), '動作': l.action, '派工編號': l.dispatchNo, '關卡': l.step ? (steps()[+l.step] || {}).title || l.step : '', '內容': l.detail }; })]], 'P單久置未取_操作紀錄_' + f.from + '_' + f.to + '.xlsx'); };
+  load();
+}
+
+/* ---------- 管理設定 ---------- */
+function vAdmin(el) {
+  el.innerHTML = '<h2>管理設定</h2><div class="panel"><h3>帳號白名單</h3><div class="actions" style="margin-bottom:10px"><button class="btn pri" id="uAdd">＋ 新增帳號</button></div><div id="uList">載入中…</div></div>' +
+    '<div class="panel"><h3>系統設定</h3><div id="setBox"></div></div><div class="panel"><h3>系統狀態</h3><div id="sysBox">載入中…</div></div>';
+  var loadUsers = function () { api('listUsers').then(function (d) { S.users = d; drawUsers(); }).catch(function (e) { toast(e.message, true); }); };
+  var drawUsers = function () {
+    var d = S.users;
+    $('#uList').innerHTML = '<div class="tbl-wrap"><table class="t"><tr><th>登入帳號</th><th>姓名</th><th>通知信 Email</th><th>角色</th><th>單位</th><th>聯強區域</th><th>狀態</th><th>最後登入</th><th></th></tr>' +
+      d.users.map(function (u) { return '<tr><td style="word-break:break-all">' + esc(u.email) + '</td><td>' + esc(u.name) + '</td><td>' + esc(u.notifyEmail || '') + '</td><td>' + (u.role === 'admin' ? '<span class="chip c-warn">管理員</span>' : '使用者') + '</td><td>' + esc(unitName(u.unit)) + '</td><td>' + esc((u.regions || '').split(',').join('、')) + '</td><td>' + (u.active === 'Y' ? '<span class="chip c-done">啟用</span>' : '<span class="chip c-stop">停用</span>') + (u.mustChange === 'Y' ? ' <span class="chip c-wait">待改密碼</span>' : '') + (u.locked ? ' <span class="chip c-bad">鎖定中</span>' : '') + '</td><td>' + esc(short(u.lastLoginAt)) + '</td><td><button class="btn sm" data-eu="' + esc(u.email) + '">編輯</button></td></tr>'; }).join('') + '</table></div>';
+    $$('[data-eu]').forEach(function (b) { b.onclick = function () { userForm(d.users.filter(function (u) { return u.email === b.dataset.eu; })[0]); }; });
+  };
+  var userForm = function (u) {
+    u = u || { email: '', name: '', role: 'user', unit: '', active: 'Y', isNew: true };
+    modal('<h3>' + (u.isNew ? '新增帳號' : '編輯帳號') + '</h3>' +
+      '<div class="form-row"><label>登入帳號（Email） <span class="req">*</span></label><input id="uE" value="' + esc(u.email) + '"' + (u.isNew ? '' : ' disabled') + '></div>' +
+      '<div class="grid2"><div class="form-row"><label>姓名</label><input id="uN" value="' + esc(u.name) + '"></div>' +
+      '<div class="form-row"><label>通知信 Email（空白＝寄到登入帳號）</label><input id="uM" type="email" value="' + esc(u.notifyEmail || '') + '" placeholder="name@example.com"></div></div>' +
+      '<div class="grid2"><div class="form-row"><label>單位 <span class="req">*</span></label><select id="uU"><option value="">請選擇</option>' + Object.keys(S.boot.units).map(function (k) { return '<option value="' + k + '"' + (u.unit === k ? ' selected' : '') + '>' + unitName(k) + '</option>'; }).join('') + '</select></div>' +
+      '<div class="form-row"><label>角色</label><select id="uR"><option value="user"' + (u.role === 'user' ? ' selected' : '') + '>使用者</option><option value="admin"' + (u.role === 'admin' ? ' selected' : '') + '>管理員</option></select></div></div>' +
+      '<div class="form-row" id="uRegRow"><label>聯強區域 <span class="req">*</span>（勾多區＝跨區；全區可看三區）</label><div style="display:flex;gap:14px;flex-wrap:wrap">' +
+        S.boot.regions.concat([S.boot.allRegion]).map(function (r) { var cur = String(u.regions || '').split(','); return '<label style="font-weight:400;display:inline-flex;align-items:center;gap:6px;margin:0;font-size:14px;color:var(--ink)"><input type="checkbox" class="uRg" value="' + r + '"' + (cur.indexOf(r) >= 0 ? ' checked' : '') + '> ' + r + '</label>'; }).join('') + '</div></div>' +
+      '<div class="form-row"><label>' + (u.isNew ? '初始密碼 <span class="req">*</span>' : '重設密碼（空白＝不變更）') + '（至少 8 個字，要有英文字母和數字；使用者第一次登入會被要求改掉）</label><div style="display:flex;gap:8px"><input id="uP" type="text" autocomplete="off" style="flex:1"><button class="btn" type="button" id="uGen">產生</button></div></div>' +
+      (u.locked ? '<div class="form-row"><label><input type="checkbox" id="uUnlock" checked> 解除鎖定（密碼錯誤太多次）</label></div>' : '') +
+      '<div class="form-row"><label>狀態</label><select id="uA"><option value="Y"' + (u.active === 'Y' ? ' selected' : '') + '>啟用</option><option value="N"' + (u.active === 'N' ? ' selected' : '') + '>停用</option></select></div>' +
+      '<div class="notice info">同單位的所有啟用帳號都會收到該單位的通知信；聯強帳號只收自己區域的建立、結案與中止通知。密碼請用電話或當面告訴同事。</div><div class="actions"><button class="btn" data-close>取消</button><button class="btn pri" id="uOk">儲存</button></div>', function (m, close) {
+      var syncReg = function () { $('#uRegRow', m).style.display = $('#uU', m).value === '聯強' ? '' : 'none'; };
+      $('#uU', m).onchange = syncReg; syncReg();
+      $$('.uRg', m).forEach(function (cb) { cb.onchange = function () { if (cb.value === S.boot.allRegion && cb.checked) $$('.uRg', m).forEach(function (o) { if (o !== cb) o.checked = false; }); else if (cb.checked) $$('.uRg', m).forEach(function (o) { if (o.value === S.boot.allRegion) o.checked = false; }); }; });
+      $('#uGen', m).onclick = function () { var a = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ', n = '23456789', out = '', r = new Uint32Array(10); crypto.getRandomValues(r); for (var i = 0; i < 7; i++) out += a[r[i] % a.length]; for (; i < 10; i++) out += n[r[i] % n.length]; $('#uP', m).value = out; };
+      $('#uOk', m).onclick = function () {
+        var regs = $$('.uRg', m).filter(function (cb) { return cb.checked; }).map(function (cb) { return cb.value; });
+        var pw = $('#uP', m).value.trim();
+        api('saveUser', { email: $('#uE', m).value, name: $('#uN', m).value.trim(), notifyEmail: $('#uM', m).value.trim(), unit: $('#uU', m).value, role: $('#uR', m).value, active: $('#uA', m).value, regions: $('#uU', m).value === '聯強' ? regs : [], password: pw, unlock: !!($('#uUnlock', m) && $('#uUnlock', m).checked) })
+          .then(function (d) { S.users = d; drawUsers(); close(); toast(pw ? '已儲存，請把密碼告訴同事：' + pw : '已儲存'); }).catch(function (e) { toast(e.message, true); });
+      };
+    });
+  };
+  $('#uAdd').onclick = function () { userForm(); };
+  var s = S.boot.settings;
+  var tpls = [['tpl_user_1', '15天聯絡機制 第1次聯絡・給使用者'], ['tpl_user_2', '15天聯絡機制 第2次聯絡・給使用者'], ['tpl_plat_2', '15天聯絡機制 第2次聯絡・給上手白金'], ['tpl_user_3', '15天聯絡機制 第3次聯絡・給使用者'], ['tpl_plat_3', '15天聯絡機制 第3次聯絡・給上手白金']];
+  $('#setBox').innerHTML = '<div class="grid2"><div class="form-row"><label>平台網址（信件中的連結）</label><input id="sURL" value="' + esc(s.APP_URL || location.href.split('#')[0]) + '"></div>' +
+    '<div class="form-row"><label>15 天聯絡機制</label><div class="notice info" style="margin:0">從第1次聯絡（使用者簡訊日）起算：第7天第2次、第14天第3次、第15天轉 ASS</div></div>' +
+    '<div class="form-row"><label>超過幾天沒處理算逾期</label><input id="sOD" type="number" min="1" value="' + esc(s.OVERDUE_DAYS) + '"></div>' +
+    '<div class="form-row"><label>每日提醒信寄送時間（0~23 點）</label><input id="sHR" type="number" min="0" max="23" value="' + esc(s.REMIND_HOUR) + '"></div></div>' +
+    '<h3 style="margin-top:8px">簡訊範本</h3><p style="font-size:13px;color:var(--ink2);margin-top:0">可用代碼：{派工編號} {訂單編號} {訂購日期} {聯強反映日} {前次簡訊日} {簡訊日} {期限}（第1次＝第7天、第2次＝第14天、第3次＝第15天，從第1次聯絡日起算）</p>' +
+    tpls.map(function (t) { return '<div class="form-row"><label>' + t[1] + '</label><textarea data-tpl="' + t[0] + '" style="min-height:110px">' + esc(s[t[0]] || '') + '</textarea></div>'; }).join('') +
+    '<button class="btn pri" id="sSave">儲存設定</button>';
+  $('#sSave').onclick = function () {
+    var p = { APP_URL: $('#sURL').value.trim(), OVERDUE_DAYS: $('#sOD').value, REMIND_HOUR: $('#sHR').value };
+    $$('[data-tpl]').forEach(function (t) { p[t.dataset.tpl] = t.value; });
+    api('saveSettings', p).then(function (ns) { S.boot.settings = ns; ls(LS_BOOT, JSON.stringify(S.boot)); toast('設定已儲存'); }).catch(function (e) { toast(e.message, true); });
+  };
+  api('adminInfo').then(function (d) {
+    $('#sysBox').innerHTML = (d.mailNote ? '<p>' + esc(d.mailNote) + '</p>' : '<p>今日剩餘發信額度：<b>' + d.quota + '</b> 封（個人 Gmail 每天約 100 封）</p>') + (d.sheetUrl && d.sheetUrl !== '#' ? '<p><a href="' + esc(d.sheetUrl) + '" target="_blank" rel="noopener">開啟資料庫試算表</a>（請勿手動改欄位名稱）</p>' : '') +
+      '<button class="btn" id="runDaily">立即寄出今日提醒信</button>';
+    $('#runDaily').onclick = function () { api('runDaily').then(function (r) { toast('已執行：寄給 ' + (r.sent.join('、') || '無') + '，逾期 ' + r.overdue + ' 件'); }).catch(function (e) { toast(e.message, true); }); };
+  }).catch(function (e) { $('#sysBox').textContent = e.message; });
+  loadUsers();
+}
+
+window.__toast = toast;
+start();
+})();
+</script>
+</body>
+</html>
